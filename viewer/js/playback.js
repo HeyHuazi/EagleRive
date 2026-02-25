@@ -15,10 +15,12 @@ const Playback = (function() {
      */
     function updatePlayIcon() {
         if (playing) {
-            icoPlay.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+            // Pause icon (Remix Icon)
+            icoPlay.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6V4z"/><path d="M14 4h4v16h-4V4z"/></svg>';
             playLabel.textContent = '暂停';
         } else {
-            icoPlay.innerHTML = '<polygon points="6,4 20,12 6,20"/>';
+            // Play icon (Remix Icon)
+            icoPlay.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 4l14 8-14 8V4z"/></svg>';
             playLabel.textContent = '播放';
         }
     }
@@ -87,10 +89,8 @@ const Playback = (function() {
         // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-            if (e.code === 'Space') {
-                e.preventDefault();
-                btnPlay.click();
-            } else if (e.code === 'KeyR') {
+            // Note: Space key is handled by Zoom module for pan functionality
+            if (e.code === 'KeyR') {
                 btnRestart.click();
             }
         });
