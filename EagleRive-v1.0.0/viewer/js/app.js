@@ -5,6 +5,19 @@
 (function() {
     'use strict';
 
+    // ===== Configure Rive to use local WASM file =====
+    // This prevents loading from CDN and improves load time
+    if (typeof window !== 'undefined' && !window.rive) {
+        window.rive = {
+            locateFile: (file) => {
+                if (file.endsWith('.wasm')) {
+                    return './lib/rive.wasm';
+                }
+                return file;
+            }
+        };
+    }
+
     // ===== Params =====
     const params = new URLSearchParams(location.search);
     const filePath = params.get('path');
@@ -71,6 +84,12 @@
             canvas: canvas,
             autoplay: false,
             autoBind: true,
+            locateFile: (file) => {
+                if (file.endsWith('.wasm')) {
+                    return './lib/rive.wasm';
+                }
+                return file;
+            },
             layout: defaultLayout,
             onLoad: () => {
                 overlay.classList.add('hidden');

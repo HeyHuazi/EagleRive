@@ -14,7 +14,6 @@ const path = require('path');
 const { FileFormat, parseRiveFile, generateThumbnail } = require('./../js/rive-util.js');
 
 const RIVE_LOCAL = path.join(__dirname, '..', 'viewer', 'lib', 'rive.webgl2.js');
-const RIVE_WASM = path.join(__dirname, '..', 'viewer', 'lib', 'rive.wasm');
 const MAX_SIZE = 400;
 const RENDER_TIMEOUT = 10000;
 
@@ -26,11 +25,12 @@ function loadRiveRuntime() {
     if (typeof window !== 'undefined' && window.rive) return Promise.resolve();
     return new Promise((resolve, reject) => {
         // 配置 Rive 使用本地 WASM 文件
+        // WASM 文件与 rive.webgl2.js 在同一目录
         if (typeof window !== 'undefined') {
             window.rive = window.rive || {};
             window.rive.locateFile = (file) => {
                 if (file.endsWith('.wasm')) {
-                    return RIVE_WASM;
+                    return 'rive.wasm';
                 }
                 return file;
             };
@@ -71,11 +71,14 @@ function fitSize(w, h) {
  * 通过拦截 getContext 注入 preserveDrawingBuffer: true 以支持 toBlob() 截图。
  */
 async function renderFirstFrame(src, dest) {
+    console.log('[Rive Thumbnail] Starting render for:', src);
     await loadRiveRuntime();
+    console.log('[Rive Thumbnail] Runtime loaded');
 
     // 读取 .riv 文件为 ArrayBuffer
     const fileBuffer = fs.readFileSync(src);
     const arrayBuffer = new Uint8Array(fileBuffer).buffer;
+    console.log('[Rive Thumbnail] File loaded, size:', fileBuffer.length, 'bytes');
 
     // 创建离屏 canvas 并挂载到 DOM（Rive 需要 canvas 在 DOM 中）
     const canvas = document.createElement('canvas');
@@ -119,8 +122,9 @@ async function renderFirstFrame(src, dest) {
                 shouldDisableRiveListeners: true,
                 enableRiveAssetCDN: false,
                 locateFile: (file) => {
+                    // WASM 文件相对于 rive.webgl2.js 在同一目录
                     if (file.endsWith('.wasm')) {
-                        return RIVE_WASM;
+                        return 'rive.wasm';
                     }
                     return file;
                 },
@@ -160,9 +164,9 @@ async function renderFirstFrame(src, dest) {
                                     inst.play(anims[0]);
                                 }
 
-                                // 等待多帧让 WebGL2 管线完成羽化/模糊/圆角等效果的合成
+                                // 等待几帧让 WebGL2 管线完成渲染（减少延迟，同时确保复杂效果能正确渲染）
                                 let frames = 0;
-                                const WAIT_FRAMES = 30;
+                                const WAIT_FRAMES = 5;  // 从30减少到5，提升性能
                                 function waitFrame() {
                                     frames++;
                                     if (frames < WAIT_FRAMES) {
