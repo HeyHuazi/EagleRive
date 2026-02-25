@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Rive 查看器</title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="./css/variables.css">
+    <link rel="stylesheet" href="./css/layout.css">
+    <link rel="stylesheet" href="./css/components.css">
+    <link rel="stylesheet" href="./css/performance.css">
+    <link rel="stylesheet" href="./css/shortcuts.css">
+    <link rel="stylesheet" href="./css/playback-controls.css">
+</head>
+<body>
+    <!-- Main -->
+    <div class="main">
+        <!-- Canvas area -->
+        <div class="canvas-area">
+            <div class="canvas-container bg-checker" id="canvasContainer">
+                <canvas id="riveCanvas"></canvas>
+                <div class="overlay" id="overlay"><div class="spinner"></div></div>
+            </div>
+            <!-- Bottom control bar -->
+            <div class="canvas-controls">
+                <div class="controls-bar">
+                    <!-- Background controls (left) -->
+                    <div class="bg-controls">
+                        <span class="bg-label">背景</span>
+                        <div class="bg-swatches">
+                            <div class="bg-swatch bg-swatch-white" data-bg="white" title="白色"></div>
+                            <div class="bg-swatch bg-swatch-black" data-bg="black" title="黑色"></div>
+                            <div class="bg-swatch bg-swatch-checker active" data-bg="checker" title="透明"></div>
+                        </div>
+                    </div>
+
+                    <!-- Right side controls (zoom + help) -->
+                    <div class="controls-right">
+                        <!-- Zoom controls -->
+                        <div class="zoom-controls">
+                            <button class="zoom-btn" id="zoomOutBtn" title="缩小 (Ctrl+-)">
+                                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M5 12h14"/>
+                                </svg>
+                            </button>
+                            <span class="zoom-display" id="zoomDisplay">100%</span>
+                            <button class="zoom-btn" id="zoomInBtn" title="放大 (Ctrl++)">
+                                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 5v14M5 12h14"/>
+                                </svg>
+                            </button>
+                            <button class="zoom-btn" id="zoomResetBtn" title="重置缩放 (Ctrl+0)">
+                                <svg class="ico" viewBox="0 0 24 24" style="fill:none;stroke:none">
+                                    <path d="M2 3C2 2.44772 2.44772 2 3 2C3.55228 2 4 2.44772 4 3V6.14371C4.84614 5.32788 5.74982 4.49767 6.725 3.81051C8.19885 2.77197 9.91151 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C7.64437 22 3.94159 19.2159 2.56928 15.3332C2.38523 14.8125 2.65816 14.2412 3.17887 14.0572C3.69959 13.8731 4.27091 14.146 4.45496 14.6668C5.55366 17.7753 8.51831 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C10.4456 4 9.12901 4.56319 7.87701 5.4454C7.03861 6.03618 6.26292 6.74327 5.47581 7.5H8.5C9.05228 7.5 9.5 7.94772 9.5 8.5C9.5 9.05228 9.05228 9.5 8.5 9.5H3C2.44772 9.5 2 9.05228 2 8.5V3Z" fill="currentColor"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-inner">
+                <!-- File info (always visible above tabs) -->
+                <div class="file-info" id="fileInfo">
+                    <div class="info-row">
+                        <div class="info-item">
+                            <span class="info-label">文件</span>
+                            <span class="info-value" id="fileName">加载中...</span>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-item">
+                            <span class="info-label">尺寸</span>
+                            <span class="info-value" id="infoDims">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">动画</span>
+                            <span class="info-value" id="infoAnimCount">-</span>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-item">
+                            <span class="info-label">状态机</span>
+                            <span class="info-value" id="infoSMCount">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">视图模型</span>
+                            <span class="info-value" id="infoVMCount">-</span>
+                        </div>
+                    </div>
+                    <div class="info-row" id="artboardRow" style="display:none">
+                        <div class="info-item">
+                            <span class="info-label">画板</span>
+                            <select class="sel" id="artboardSelect"></select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="sidebar-tabs">
+                    <button class="sidebar-tab active" data-tab="statemachine">状态机</button>
+                    <button class="sidebar-tab" data-tab="timeline">时间线</button>
+                </div>
+
+                <!-- Tab content -->
+                <div class="sidebar-body">
+                    <!-- 状态机 + Data Binding -->
+                    <div class="panel active" id="panel-statemachine">
+                        <div class="section" id="smSection">
+                            <select class="sel" id="smSelect"><option value="">选择...</option></select>
+                            <div id="smInputs" style="display:none; margin-top:8px"></div>
+                        </div>
+                        <!-- Data Binding（状态机下方） -->
+                        <div class="section" id="vmSection" style="display:none">
+                            <div class="sm-type-hd" style="margin-bottom:8px">Data Binding</div>
+                            <select class="sel" id="vmSelect"><option value="">无视图模型</option></select>
+                            <div id="vmProps" style="margin-top:8px"></div>
+                        </div>
+                    </div>
+                    <!-- 时间线 -->
+                    <div class="panel" id="panel-timeline">
+                        <div id="animList"><div class="empty">加载中...</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rive Runtime (本地文件，支持离线使用) -->
+    <script src="./lib/rive.webgl2.js"></script>
+
+    <!-- Modules -->
+    <script src="./js/utils.js"></script>
+    <script src="./js/animation.js"></script>
+    <script src="./js/state-machine.js"></script>
+    <script src="./js/data-binding.js"></script>
+    <script src="./js/playback.js"></script>
+    <script src="./js/playback-controls.js"></script>
+    <script src="./js/zoom.js"></script>
+    <script src="./js/ui.js"></script>
+    <script src="./js/performance.js"></script>
+    <script src="./js/shortcuts.js"></script>
+
+    <!-- Main App -->
+    <script src="./js/app.js"></script>
+</body>
+</html>
