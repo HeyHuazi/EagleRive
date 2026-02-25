@@ -16,8 +16,9 @@ console.log('🔨 Building EagleRive plugin...\n');
 
 // 1. 清理 dist 目录
 console.log('🧹 Cleaning dist directory...');
-if (fs.existsSync(distDir)) 
+if (fs.existsSync(distDir)) {
     fs.rmSync(distDir, { recursive: true, force: true });
+}
 
 fs.mkdirSync(distDir, { recursive: true });
 
@@ -34,11 +35,12 @@ filesToCopy.forEach(({ src, dest }) => {
     const srcPath = path.join(rootDir, src);
     const destPath = path.join(distDir, dest);
 
-    if (fs.statSync(srcPath).isDirectory()) 
+    if (fs.statSync(srcPath).isDirectory()) {
         execSync(`cp -r "${srcPath}" "${destPath}"`, { stdio: 'inherit' });
-    else 
+    } else {
         fs.copyFileSync(srcPath, destPath);
-  
+    }
+
     console.log(`   ✓ Copied ${src}`);
 });
 
@@ -65,57 +67,23 @@ const mergedCssPath = path.join(distDir, 'viewer', 'css', 'merged.css');
 fs.writeFileSync(mergedCssPath, mergedCss);
 console.log(`   ✓ Created merged.css (${cssFiles.length} files merged)`);
 
-// 4. 合并 JavaScript 模块
-console.log('\n📦 Merging JavaScript modules...');
-const jsDir = path.join(rootDir, 'viewer', 'js');
-const jsFiles = [
-    'utils.js',
-    'animation.js',
-    'state-machine.js',
-    'data-binding.js',
-    'playback.js',
-    'playback-controls.js',
-    'zoom.js',
-    'ui.js',
-    'performance.js',
-    'shortcuts.js',
-];
+// 4. JavaScript 文件保持原样（不合并，避免作用域问题）
+console.log('\n📦 JavaScript files kept separate (original 11 modules)');
+console.log('   ✓ Skipping JavaScript merge to prevent scope issues');
 
-let mergedJs = '// EagleRive Viewer - Merged Modules\n\n';
-jsFiles.forEach(file => {
-    const filePath = path.join(jsDir, file);
-    const content = fs.readFileSync(filePath, 'utf8');
-    mergedJs += `// ===== ${file} =====\n\n${content}\n\n`;
-});
-
-// 添加 app.js（主入口）
-const appJsPath = path.join(jsDir, 'app.js');
-const appContent = fs.readFileSync(appJsPath, 'utf8');
-mergedJs += `// ===== app.js =====\n\n${appContent}\n`;
-
-const mergedJsPath = path.join(distDir, 'viewer', 'js', 'merged.js');
-fs.writeFileSync(mergedJsPath, mergedJs);
-console.log(`   ✓ Created merged.js (${jsFiles.length + 1} modules merged)`);
-
-// 5. 更新 HTML 文件（使用合并后的资源）
+// 5. 更新 HTML 文件（只合并 CSS，保持 JavaScript 原样）
 console.log('\n📝 Updating HTML file...');
 const htmlPath = path.join(distDir, 'viewer', 'riv.html');
 let htmlContent = fs.readFileSync(htmlPath, 'utf8');
 
-// 替换 CSS 链接
+// 只替换 CSS 链接（不替换 JavaScript）
 htmlContent = htmlContent.replace(
-    /<!-- CSS -->[\s\S]*?<!--\/CSS -->/,
-    '<!-- CSS -->\n    <link rel="stylesheet" href="./css/merged.css">\n<!-- /CSS -->'
-);
-
-// 替换 JS 链接
-htmlContent = htmlContent.replace(
-    /<!-- Modules -->[\s\S]*?<!-- Main App -->[\s\S]*?<script src="\.\/js\/app\.js"><\/script>/,
-    '<!-- Merged JavaScript -->\n    <script src="./js/merged.js"></script>'
+    /<!-- CSS -->[\s\S]*?<\/head>/,
+    '<!-- CSS -->\n    <link rel="stylesheet" href="./css/merged.css">\n</head>'
 );
 
 fs.writeFileSync(htmlPath, htmlContent);
-console.log('   ✓ Updated riv.html to use merged resources');
+console.log('   ✓ Updated riv.html (CSS merged, JS unchanged)');
 
 // 6. 创建压缩包（可选）
 console.log('\n📦 Creating distribution package...');
@@ -126,9 +94,9 @@ try {
     const zipFilePath = path.join(rootDir, zipFileName);
 
     // 删除旧的压缩包
-    if (fs.existsSync(zipFilePath)) 
+    if (fs.existsSync(zipFilePath)) {
         fs.unlinkSync(zipFilePath);
-  
+    }
 
     // 创建新的压缩包
     execSync(`cd "${distDir}" && zip -r "${zipFilePath}" .`, { stdio: 'inherit' });
@@ -141,6 +109,6 @@ console.log('\n✅ Build complete!');
 console.log(`📁 Output directory: ${distDir}`);
 console.log('📋 Build summary:');
 console.log('   - Merged CSS: 6 files → 1 file');
-console.log('   - Merged JS: 11 modules → 1 file');
-console.log('   - HTML updated to use merged resources');
+console.log('   - JavaScript: 11 files (unchanged)');
+console.log('   - HTML updated to use merged CSS');
 console.log('\n🚀 Ready to distribute!');
