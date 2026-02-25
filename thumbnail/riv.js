@@ -108,49 +108,52 @@ async function renderFirstFrame(src, dest) {
                         canvas.style.height = h + 'px';
                         inst.resizeDrawingSurfaceToCanvas();
 
-                        // 优先播放第一个状态机，其次第一个动画
-                        const sms = inst.stateMachineNames || [];
-                        const anims = inst.animationNames || [];
+                        // 模拟预览页面的播放逻辑：
+                        // 1. 先调用 play() 让 autoBind 完全应用
+                        // 2. 在 requestAnimationFrame 后再播放第一个状态机
+                        inst.play();
 
-                        if (sms.length > 0) {
-                            inst.play(sms[0]);
-                        } else if (anims.length > 0) {
-                            inst.play(anims[0]);
-                        } else {
-                            inst.play();
-                        }
+                        requestAnimationFrame(() => {
+                            requestAnimationFrame(() => {
+                                const sms = inst.stateMachineNames || [];
+                                if (sms.length > 0) {
+                                    inst.stop();
+                                    inst.play(sms[0]);
+                                }
 
-                        // 等待多帧让 WebGL2 管线完成羽化/模糊等效果的合成
-                        let frames = 0;
-                        const WAIT_FRAMES = 10;
-                        function waitFrame() {
-                            frames++;
-                            if (frames < WAIT_FRAMES) {
-                                requestAnimationFrame(waitFrame);
-                                return;
-                            }
-                            // 在 rAF 回调中直接截图（此时 Rive 刚完成本帧绘制，drawingBuffer 有效）
-                            try {
-                                canvas.toBlob((blob) => {
-                                    doCleanup();
-                                    if (!blob) {
-                                        reject(new Error('toBlob returned null'));
+                                // 等待多帧让 WebGL2 管线完成羽化/模糊等效果的合成
+                                let frames = 0;
+                                const WAIT_FRAMES = 10;
+                                function waitFrame() {
+                                    frames++;
+                                    if (frames < WAIT_FRAMES) {
+                                        requestAnimationFrame(waitFrame);
                                         return;
                                     }
-                                    blob.arrayBuffer().then(buf => {
-                                        resolve({
-                                            width: w,
-                                            height: h,
-                                            data: Buffer.from(buf),
-                                        });
-                                    });
-                                }, 'image/png');
-                            } catch (e) {
-                                doCleanup();
-                                reject(e);
-                            }
-                        }
-                        requestAnimationFrame(waitFrame);
+                                    // 在 rAF 回调中直接截图（此时 Rive 刚完成本帧绘制，drawingBuffer 有效）
+                                    try {
+                                        canvas.toBlob((blob) => {
+                                            doCleanup();
+                                            if (!blob) {
+                                                reject(new Error('toBlob returned null'));
+                                                return;
+                                            }
+                                            blob.arrayBuffer().then(buf => {
+                                                resolve({
+                                                    width: w,
+                                                    height: h,
+                                                    data: Buffer.from(buf),
+                                                });
+                                            });
+                                        }, 'image/png');
+                                    } catch (e) {
+                                        doCleanup();
+                                        reject(e);
+                                    }
+                                }
+                                waitFrame();
+                            });
+                        });
                     } catch (e) {
                         doCleanup();
                         reject(e);
