@@ -13,7 +13,7 @@ const fs = require('fs');
 const path = require('path');
 const { FileFormat, parseRiveFile, generateThumbnail } = require('./../js/rive-util.js');
 
-const RIVE_CDN = 'https://unpkg.com/@rive-app/webgl2@2.33.1';
+const RIVE_CDN = 'https://unpkg.com/@rive-app/webgl2@2.35.0';
 const MAX_SIZE = 400;
 const RENDER_TIMEOUT = 10000;
 

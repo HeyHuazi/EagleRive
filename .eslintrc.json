@@ -1,0 +1,57 @@
+{
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2021": true
+  },
+  "extends": "eslint:recommended",
+  "parserOptions": {
+    "ecmaVersion": 2021,
+    "sourceType": "module"
+  },
+  "rules": {
+    "no-console": "off",
+    "no-unused-vars": ["warn", {
+      "argsIgnorePattern": "^_"
+    }],
+    "no-undef": "off",
+    "no-var": "warn",
+    "prefer-const": "warn",
+    "eqeqeq": ["warn", "always"],
+    "curly": ["warn", "all"],
+    "brace-style": ["warn", "1tbs"],
+    "indent": ["warn", 4],
+    "quotes": ["warn", "single", {
+      "avoidEscape": true
+    }],
+    "semi": ["warn", "always"],
+    "comma-spacing": ["warn", {
+      "before": false,
+      "after": true
+    }],
+    "key-spacing": ["warn", {
+      "beforeColon": false,
+      "afterColon": true
+    }],
+    "space-before-function-paren": ["warn", {
+      "anonymous": "never",
+      "named": "never",
+      "asyncArrow": "always"
+    }],
+    "object-curly-spacing": ["warn", "always"],
+    "array-bracket-spacing": ["warn", "never"],
+    "space-infix-ops": "warn"
+  },
+  "globals": {
+    "rive": "readonly",
+    "RiveUtils": "readonly",
+    "DataType": "readonly",
+    "PropertyType": "readonly",
+    "normalizeType": "readonly",
+    "StateMachine": "readonly",
+    "Animation": "readonly",
+    "DataBinding": "readonly",
+    "Playback": "readonly",
+    "UI": "readonly"
+  }
+}
