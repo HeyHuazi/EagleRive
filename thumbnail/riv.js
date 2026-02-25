@@ -13,18 +13,18 @@ const fs = require('fs');
 const path = require('path');
 const { FileFormat, parseRiveFile, generateThumbnail } = require('./../js/rive-util.js');
 
-const RIVE_CDN = 'https://unpkg.com/@rive-app/webgl2@2.35.0';
+const RIVE_LOCAL = path.join(__dirname, '..', 'viewer', 'lib', 'rive.webgl2.js');
 const MAX_SIZE = 400;
 const RENDER_TIMEOUT = 10000;
 
 /**
- * 加载 Rive 运行时（首次加载后缓存到 window.rive，后续复用）
+ * 加载 Rive 运行时（本地文件，首次加载后缓存到 window.rive）
  */
 function loadRiveRuntime() {
     if (typeof window !== 'undefined' && window.rive) return Promise.resolve();
     return new Promise((resolve, reject) => {
         const s = document.createElement('script');
-        s.src = RIVE_CDN;
+        s.src = RIVE_LOCAL;
         s.onload = resolve;
         s.onerror = () => reject(new Error('Failed to load Rive runtime'));
         document.head.appendChild(s);
@@ -46,12 +46,16 @@ function fitSize(w, h) {
  *
  * 流程：
  *   1. 加载 Rive 运行时（有缓存）
- *   2. 在 DOM 中创建离屏 <canvas>
+ *   2. 在 DOM 中创建离屏 <canvas>，拦截 getContext 注入 preserveDrawingBuffer
  *   3. 用 buffer 加载 .riv 文件
  *   4. 获取画板尺寸，按比例调整 canvas
  *   5. 优先播放第一个状态机，否则播放第一个动画
- *   6. 等待10帧渲染后 toBlob() 截图
+ *   6. 等待30帧渲染后 toBlob() 截图
  *   7. 写入 dest 路径
+ *
+ * 关键：不预创建 WebGL2 上下文，让 Rive 渲染器自行创建并配置所需的
+ * WebGL 扩展（羽化、模糊、圆角、混合模式等高级效果依赖这些扩展）。
+ * 通过拦截 getContext 注入 preserveDrawingBuffer: true 以支持 toBlob() 截图。
  */
 async function renderFirstFrame(src, dest) {
     await loadRiveRuntime();
@@ -67,8 +71,18 @@ async function renderFirstFrame(src, dest) {
     canvas.style.cssText = 'position:fixed;top:-9999px;left:-9999px;pointer-events:none;opacity:0;';
     document.body.appendChild(canvas);
 
-    // 预先创建 WebGL2 上下文，启用 preserveDrawingBuffer 以支持 toBlob()
-    const gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true });
+    // 拦截 getContext，让 Rive 自行创建 WebGL2 上下文时自动注入 preserveDrawingBuffer
+    // 这样 Rive 渲染器能正确启用所有需要的 WebGL 扩展（羽化/模糊/圆角等）
+    const origGetContext = canvas.getContext.bind(canvas);
+    canvas.getContext = function(type, attrs) {
+        if (type === 'webgl2' || type === 'webgl') {
+            attrs = Object.assign({}, attrs || {}, {
+                preserveDrawingBuffer: true,
+                antialias: true,
+            });
+        }
+        return origGetContext(type, attrs);
+    };
 
     try {
         const result = await new Promise((resolve, reject) => {
@@ -89,6 +103,8 @@ async function renderFirstFrame(src, dest) {
                 canvas: canvas,
                 autoplay: false,
                 autoBind: true,
+                shouldDisableRiveListeners: true,
+                enableRiveAssetCDN: false,
                 layout: new rive.Layout({
                     fit: rive.Fit.Contain,
                     alignment: rive.Alignment.Center,
@@ -116,14 +132,18 @@ async function renderFirstFrame(src, dest) {
                         requestAnimationFrame(() => {
                             requestAnimationFrame(() => {
                                 const sms = inst.stateMachineNames || [];
+                                const anims = inst.animationNames || [];
                                 if (sms.length > 0) {
                                     inst.stop();
                                     inst.play(sms[0]);
+                                } else if (anims.length > 0) {
+                                    inst.stop();
+                                    inst.play(anims[0]);
                                 }
 
-                                // 等待多帧让 WebGL2 管线完成羽化/模糊等效果的合成
+                                // 等待多帧让 WebGL2 管线完成羽化/模糊/圆角等效果的合成
                                 let frames = 0;
-                                const WAIT_FRAMES = 10;
+                                const WAIT_FRAMES = 30;
                                 function waitFrame() {
                                     frames++;
                                     if (frames < WAIT_FRAMES) {
