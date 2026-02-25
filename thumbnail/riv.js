@@ -14,15 +14,28 @@ const path = require('path');
 const { FileFormat, parseRiveFile, generateThumbnail } = require('./../js/rive-util.js');
 
 const RIVE_LOCAL = path.join(__dirname, '..', 'viewer', 'lib', 'rive.webgl2.js');
+const RIVE_WASM = path.join(__dirname, '..', 'viewer', 'lib', 'rive.wasm');
 const MAX_SIZE = 400;
 const RENDER_TIMEOUT = 10000;
 
 /**
  * 加载 Rive 运行时（本地文件，首次加载后缓存到 window.rive）
+ * 配置使用本地 WASM 文件，避免从 CDN 加载
  */
 function loadRiveRuntime() {
     if (typeof window !== 'undefined' && window.rive) return Promise.resolve();
     return new Promise((resolve, reject) => {
+        // 配置 Rive 使用本地 WASM 文件
+        if (typeof window !== 'undefined') {
+            window.rive = window.rive || {};
+            window.rive.locateFile = (file) => {
+                if (file.endsWith('.wasm')) {
+                    return RIVE_WASM;
+                }
+                return file;
+            };
+        }
+
         const s = document.createElement('script');
         s.src = RIVE_LOCAL;
         s.onload = resolve;
@@ -105,6 +118,12 @@ async function renderFirstFrame(src, dest) {
                 autoBind: true,
                 shouldDisableRiveListeners: true,
                 enableRiveAssetCDN: false,
+                locateFile: (file) => {
+                    if (file.endsWith('.wasm')) {
+                        return RIVE_WASM;
+                    }
+                    return file;
+                },
                 layout: new rive.Layout({
                     fit: rive.Fit.Contain,
                     alignment: rive.Alignment.Center,
