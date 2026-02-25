@@ -15,17 +15,39 @@ const UI = (function() {
                 tab.classList.add('active');
                 document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
 
-                // Switch to appropriate playback mode
                 const curSM = window.stateMachineModule ? window.stateMachineModule.getCurrentSM() : null;
                 const curAnim = window.animationModule ? window.animationModule.getCurrentAnim() : null;
 
-                if (tab.dataset.tab === 'statemachine' && curSM) {
-                    if (window.stateMachineModule) {
-                        window.stateMachineModule.playSM(riveInstance, curSM);
+                // Tab switching logic
+                if (tab.dataset.tab === 'timeline') {
+                    // Switch to animation mode - stop state machine
+                    if (curSM && window.riveInstance) {
+                        window.riveInstance.stop(curSM);
                     }
-                } else if (tab.dataset.tab === 'timeline' && curAnim) {
-                    if (window.animationModule) {
-                        window.animationModule.playAnim(riveInstance, curAnim);
+                    // Play animation if exists, or play first animation
+                    if (curAnim && window.riveInstance) {
+                        if (window.animationModule) {
+                            window.animationModule.playAnim(riveInstance, curAnim);
+                        }
+                    } else if (window.riveInstance) {
+                        var anims = window.riveInstance.animationNames || [];
+                        if (anims.length > 0) {
+                            if (window.animationModule) {
+                                window.animationModule.setCurrentAnim(anims[0]);
+                                window.animationModule.playAnim(riveInstance, anims[0]);
+                            }
+                        }
+                    }
+                } else if (tab.dataset.tab === 'statemachine') {
+                    // Switch to state machine mode - stop animation
+                    if (curAnim && window.riveInstance) {
+                        window.riveInstance.stop(curAnim);
+                    }
+                    // Play state machine if exists
+                    if (curSM && window.riveInstance) {
+                        if (window.stateMachineModule) {
+                            window.stateMachineModule.playSM(riveInstance, curSM);
+                        }
                     }
                 }
             });

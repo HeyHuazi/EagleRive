@@ -133,6 +133,11 @@
         } catch (e) {
             console.error('[Rive] populateViewModel error:', e);
         }
+
+        // Apply initial time scale for playback speed
+        if (window.Playback) {
+            window.Playback.applyTimeScale();
+        }
     }
 
     // ===== Resize handler =====
@@ -167,14 +172,40 @@
     });
 
     // ===== Initialize =====
-    // Setup playback controls
-    if (window.Playback) {
-        window.Playback.bindEvents(null); // Will be called with instance later
+    // Setup playback UI controls (speed & direction)
+    try {
+        if (window.PlaybackControls) {
+            window.PlaybackControls.init();
+        }
+    } catch (e) {
+        console.error('[App] PlaybackControls init error:', e);
     }
 
     // Setup zoom controls
-    if (window.Zoom) {
-        window.Zoom.initControls();
+    try {
+        if (window.Zoom) {
+            window.Zoom.initControls();
+        }
+    } catch (e) {
+        console.error('[App] Zoom init error:', e);
+    }
+
+    // Setup performance monitoring
+    try {
+        if (window.Performance) {
+            window.Performance.init();
+        }
+    } catch (e) {
+        console.error('[App] Performance init error:', e);
+    }
+
+    // Setup shortcuts help
+    try {
+        if (window.Shortcuts) {
+            window.Shortcuts.init();
+        }
+    } catch (e) {
+        console.error('[App] Shortcuts init error:', e);
     }
 
     // Start

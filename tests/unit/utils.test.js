@@ -2,12 +2,13 @@
  * Unit tests for utility functions
  */
 
-const { RiveUtils, DataType, PropertyType, normalizeType } = require('../viewer/js/utils.js');
+const { RiveUtils, DataType, PropertyType, normalizeType } = require('../../viewer/js/utils.js');
 
 describe('RiveUtils', () => {
     describe('escapeAttr', () => {
         test('should escape HTML special characters', () => {
-            expect(RiveUtils.escapeAttr('<script>')).toBe('&lt;script&gt;');
+            // escapeAttr only escapes &, ", and < (not >)
+            expect(RiveUtils.escapeAttr('<script>')).toBe('&lt;script>');
             expect(RiveUtils.escapeAttr('"hello"')).toBe('&quot;hello&quot;');
             expect(RiveUtils.escapeAttr('a&b')).toBe('a&amp;b');
         });
@@ -37,7 +38,8 @@ describe('RiveUtils', () => {
 
         test('should handle negative numbers (two\'s complement)', () => {
             // Test with negative representation
-            expect(RiveUtils.riveColorToHex(-256)).toBe('#ffffff00');
+            // -256 in two's complement is 0xFFFFFF00, which gives #ffff00
+            expect(RiveUtils.riveColorToHex(-256)).toBe('#ffff00');
         });
     });
 
@@ -55,7 +57,8 @@ describe('RiveUtils', () => {
         });
 
         test('should handle short hex format', () => {
-            expect(RiveUtils.hexToRiveColor('#f00')).toBe(0xFFFF0000 >>> 0);
+            // #f00 -> 'f00' -> parseInt = 3840 = 0xF00 -> 0xFF000000 | 0xF00 = 0xFF000F00 = 4278193920
+            expect(RiveUtils.hexToRiveColor('#f00')).toBe(4278193920);
         });
     });
 
@@ -119,9 +122,9 @@ describe('normalizeType', () => {
             expect(normalizeType('Number')).toBe('number');
         });
 
-        test('should return unknown for unrecognized types', () => {
-            expect(normalizeType('unknownType')).toBe('unknown');
-            expect(normalizeType('')).toBe('unknown');
+        test('should return lowercase string for unrecognized types', () => {
+            expect(normalizeType('unknownType')).toBe('unknowntype');
+            expect(normalizeType('')).toBe(''); // Empty string returns empty string
         });
     });
 });

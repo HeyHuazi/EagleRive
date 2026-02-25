@@ -27,6 +27,12 @@ const Animation = (function() {
                 list.querySelectorAll('.item').forEach(function(x) { x.classList.remove('active'); });
                 el.classList.add('active');
 
+                // Stop current state machine if running
+                var curSM = window.stateMachineModule ? window.stateMachineModule.getCurrentSM() : null;
+                if (curSM) {
+                    try { riveInstance.stop(curSM); } catch (e) {}
+                }
+
                 // Stop current animation
                 if (currentAnim) {
                     try { riveInstance.stop(currentAnim); } catch (e) {}
@@ -34,11 +40,6 @@ const Animation = (function() {
 
                 currentAnim = el.dataset.anim;
                 riveInstance.play(currentAnim);
-
-                // Update playing state
-                if (window.playbackModule) {
-                    window.playbackModule.setPlaying(true);
-                }
             });
         });
     }
@@ -46,9 +47,6 @@ const Animation = (function() {
     function playAnim(riveInstance, name) {
         if (name) {
             riveInstance.play(name);
-            if (window.playbackModule) {
-                window.playbackModule.setPlaying(true);
-            }
         }
     }
 

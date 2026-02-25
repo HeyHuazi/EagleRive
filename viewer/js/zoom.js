@@ -133,19 +133,10 @@ const Zoom = (function() {
      * Stop panning (on space key up)
      */
     function stopPan() {
-        const wasPanning = isPanning;
         isPanning = false;
         const canvas = document.getElementById('canvasContainer');
         if (canvas) {
             canvas.style.cursor = 'default';
-        }
-
-        // If space was pressed but no dragging occurred, trigger play/pause
-        if (wasPanning && !hasPanned) {
-            const btnPlay = document.getElementById('btnPlay');
-            if (btnPlay) {
-                btnPlay.click();
-            }
         }
     }
 

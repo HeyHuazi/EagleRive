@@ -52,11 +52,6 @@ const StateMachine = (function() {
 
         currentSM = name;
         riveInstance.play(name);
-
-        // Update playing state in Playback module
-        if (window.playbackModule) {
-            window.playbackModule.setPlaying(true);
-        }
     }
 
     /**

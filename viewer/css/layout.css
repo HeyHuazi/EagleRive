@@ -48,11 +48,26 @@
     gap: 12px;
 }
 
+.controls-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 1;
+}
+
+/* Right side controls container */
+.controls-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
 /* Zoom controls */
 .zoom-controls {
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-shrink: 0;
 }
 
 .zoom-btn {
@@ -97,6 +112,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-shrink: 0;
 }
 
 .bg-label {

@@ -1,108 +1,99 @@
 /**
  * Playback control module for Rive
+ * Handles speed and direction controls
  */
 
 const Playback = (function() {
-    let playing = true;
-
-    const btnPlay = document.getElementById('btnPlay');
-    const btnRestart = document.getElementById('btnRestart');
-    const playLabel = document.getElementById('playLabel');
-    const icoPlay = document.getElementById('icoPlay');
+    let playbackSpeed = 1.0;
+    let playDirection = 1; // 1: forward, -1: backward
+    const minSpeed = 0.1;
+    const maxSpeed = 3.0;
 
     /**
-     * Update play/pause icon
+     * Set playback speed
      */
-    function updatePlayIcon() {
-        if (playing) {
-            // Pause icon (Remix Icon)
-            icoPlay.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6V4z"/><path d="M14 4h4v16h-4V4z"/></svg>';
-            playLabel.textContent = '暂停';
-        } else {
-            // Play icon (Remix Icon)
-            icoPlay.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 4l14 8-14 8V4z"/></svg>';
-            playLabel.textContent = '播放';
+    function setSpeed(speed) {
+        playbackSpeed = Math.max(minSpeed, Math.min(maxSpeed, speed));
+        applyTimeScale();
+        updateSpeedDisplay();
+    }
+
+    /**
+     * Get current playback speed
+     */
+    function getSpeed() {
+        return playbackSpeed;
+    }
+
+    /**
+     * Update speed display UI
+     */
+    function updateSpeedDisplay() {
+        const display = document.getElementById('speedDisplay');
+        const slider = document.getElementById('speedSlider');
+
+        if (display) {
+            const percentage = Math.round(playbackSpeed * 100);
+            display.textContent = percentage + '%';
+        }
+
+        if (slider) {
+            slider.value = playbackSpeed;
         }
     }
 
     /**
-     * Toggle play/pause
+     * Toggle playback direction
      */
-    function togglePlayPause(riveInstance) {
-        if (!riveInstance) return;
-
-        if (playing) {
-            riveInstance.pause();
-        } else {
-            // Resume playback based on current mode
-            const curSM = window.stateMachineModule ? window.stateMachineModule.getCurrentSM() : null;
-            const curAnim = window.animationModule ? window.animationModule.getCurrentAnim() : null;
-
-            if (curSM) {
-                riveInstance.play(curSM);
-            } else if (curAnim) {
-                riveInstance.play(curAnim);
-            } else {
-                riveInstance.play();
-            }
-        }
-
-        playing = !playing;
-        updatePlayIcon();
+    function toggleDirection() {
+        playDirection *= -1;
+        applyTimeScale();
+        updateDirectionButton();
     }
 
     /**
-     * Restart playback
+     * Get current playback direction
      */
-    function restart(riveInstance) {
-        if (!riveInstance) return;
-
-        const curSM = window.stateMachineModule ? window.stateMachineModule.getCurrentSM() : null;
-        const curAnim = window.animationModule ? window.animationModule.getCurrentAnim() : null;
-
-        riveInstance.reset();
-
-        if (curSM) {
-            riveInstance.play(curSM);
-            requestAnimationFrame(() => requestAnimationFrame(() => {
-                if (window.stateMachineModule) {
-                    window.stateMachineModule.loadSMInputs(riveInstance, curSM);
-                }
-            }));
-        } else if (curAnim) {
-            riveInstance.play(curAnim);
-        } else {
-            riveInstance.play();
-        }
-
-        playing = true;
-        updatePlayIcon();
+    function getDirection() {
+        return playDirection;
     }
 
     /**
-     * Bind playback control events
+     * Update direction button appearance
      */
-    function bindEvents(riveInstance) {
-        btnPlay.addEventListener('click', () => togglePlayPause(riveInstance));
-        btnRestart.addEventListener('click', () => restart(riveInstance));
+    function updateDirectionButton() {
+        const btn = document.getElementById('directionBtn');
+        if (!btn) return;
 
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-            // Note: Space key is handled by Zoom module for pan functionality
-            if (e.code === 'KeyR') {
-                btnRestart.click();
-            }
-        });
+        if (playDirection === -1) {
+            btn.classList.add('active');
+            btn.title = '方向: 反向 (点击切换)';
+        } else {
+            btn.classList.remove('active');
+            btn.title = '方向: 正向 (点击切换)';
+        }
+    }
+
+    /**
+     * Apply time scale to Rive instance
+     */
+    function applyTimeScale() {
+        if (window.riveInstance) {
+            const timeScale = playbackSpeed * playDirection;
+            window.riveInstance.timeScale = timeScale;
+        }
     }
 
     return {
-        updatePlayIcon,
-        togglePlayPause,
-        restart,
-        bindEvents,
-        setPlaying: (isPlaying) => { playing = isPlaying; updatePlayIcon(); },
-        isPlaying: () => playing
+        // Speed control
+        setSpeed,
+        getSpeed,
+        updateSpeedDisplay,
+        // Direction control
+        toggleDirection,
+        getDirection,
+        updateDirectionButton,
+        applyTimeScale
     };
 })();
 
