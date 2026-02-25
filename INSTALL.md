@@ -31,11 +31,13 @@
 | [`js/rive-util.js`](js/rive-util.js:1) | Rive 文件处理工具 |
 | [`thumbnail/riv.js`](thumbnail/riv.js:1) | 缩略图生成器 |
 | [`viewer/riv.html`](viewer/riv.html:1) | 动画预览播放器 |
+| [`viewer/lib/rive.webgl2.js`](viewer/lib/rive.webgl2.js:1) | Rive 运行时（本地文件）|
 
 ## 技术说明
 
-- **缩略图**: 使用 Sharp 生成占位图标（无需复杂依赖）
-- **预览**: 使用 CDN 加载的 Rive Web 运行时
+- **缩略图**: 使用 Rive WebGL2 渲染器生成真实截图
+- **预览**: 使用本地 Rive Web 运行时（`@rive-app/webgl2@2.35.0`）
+- **离线支持**: 完全离线可用，无需网络连接
 - **兼容性**: 支持 macOS、Windows、Linux
 
 ## 故障排除
@@ -50,7 +52,10 @@ node --version
 
 ### 问题: Eagle 中无法预览动画
 
-**解决方案**: 检查网络连接，需要访问 CDN 加载 Rive 运行时。
+**解决方案**:
+- 确认 `viewer/lib/rive.webgl2.js` 文件存在
+- 检查浏览器控制台是否有错误
+- 确认 Rive 文件未损坏
 
 ### 问题: 缩略图不显示
 

@@ -13,7 +13,7 @@ const fs = require('fs');
 const path = require('path');
 const { FileFormat, parseRiveFile, generateThumbnail } = require('./../js/rive-util.js');
 
-const RIVE_CDN = 'https://unpkg.com/@rive-app/webgl2@2.35.0';
+const RIVE_CDN = './viewer/lib/rive.webgl2.js'; // 本地文件，支持离线使用
 const MAX_SIZE = 400;
 const RENDER_TIMEOUT = 10000;
 
