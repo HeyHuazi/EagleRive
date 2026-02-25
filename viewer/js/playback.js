@@ -105,3 +105,6 @@ const Playback = (function() {
         isPlaying: () => playing
     };
 })();
+
+// Expose to global window object
+window.Playback = Playback;

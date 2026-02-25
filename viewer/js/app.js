@@ -14,6 +14,12 @@
     window.currentFilePath = filePath;
     window.riveInstance = null;
 
+    // Setup module references early (before any module code runs)
+    window.stateMachineModule = window.StateMachine || null;
+    window.animationModule = window.Animation || null;
+    window.dataBindingModule = window.DataBinding || null;
+    window.playbackModule = window.Playback || null;
+
     // Apply theme
     if (theme === 'dark') {
         document.body.classList.add('dark-theme');
@@ -141,12 +147,6 @@
             window.riveInstance.cleanup();
         }
     });
-
-    // ===== Setup module references =====
-    window.stateMachineModule = window.StateMachine || null;
-    window.animationModule = window.Animation || null;
-    window.dataBindingModule = window.DataBinding || null;
-    window.playbackModule = window.Playback || null;
 
     // ===== Initialize =====
     // Setup playback controls

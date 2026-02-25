@@ -37,7 +37,7 @@ const StateMachine = (function() {
      * Play a state machine
      */
     function playSM(riveInstance, name) {
-        const { playAnim, getCurrentAnim } = Animation || {};
+        const { playAnim, getCurrentAnim } = window.Animation || {};
 
         // Stop current animation if any
         const curAnim = getCurrentAnim ? getCurrentAnim() : null;
@@ -190,3 +190,6 @@ const StateMachine = (function() {
         setCurrentSM: (sm) => { currentSM = sm; }
     };
 })();
+
+// Expose to global window object
+window.StateMachine = StateMachine;

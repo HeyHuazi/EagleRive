@@ -496,3 +496,6 @@ const DataBinding = (function() {
         getCurrentVMI: () => currentVMI
     };
 })();
+
+// Expose to global window object
+window.DataBinding = DataBinding;

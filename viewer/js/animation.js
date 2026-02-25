@@ -59,3 +59,6 @@ const Animation = (function() {
         setCurrentAnim: (anim) => { currentAnim = anim; }
     };
 })();
+
+// Expose to global window object
+window.Animation = Animation;

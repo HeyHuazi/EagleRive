@@ -207,3 +207,6 @@ const UI = (function() {
         showRevNotice
     };
 })();
+
+// Expose to global window object
+window.UI = UI;

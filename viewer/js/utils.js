@@ -86,5 +86,12 @@ function normalizeType(t) {
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
+    // Node.js environment
     module.exports = { RiveUtils, DataType, PropertyType, normalizeType };
+} else {
+    // Browser environment - expose to window
+    window.RiveUtils = RiveUtils;
+    window.DataType = DataType;
+    window.PropertyType = PropertyType;
+    window.normalizeType = normalizeType;
 }
