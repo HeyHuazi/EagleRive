@@ -1,0 +1,21 @@
+{
+  "name": "eagle-plugin-rive",
+  "version": "2.0.0",
+  "description": "Eagle format extension plugin for Rive files (.riv and .rev)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "eagle",
+    "plugin",
+    "rive",
+    "animation",
+    "preview"
+  ],
+  "author": "Huazi",
+  "license": "MIT",
+  "dependencies": {
+    "sharp": "^0.33.2"
+  }
+}
