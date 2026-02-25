@@ -19,6 +19,7 @@
     window.animationModule = window.Animation || null;
     window.dataBindingModule = window.DataBinding || null;
     window.playbackModule = window.Playback || null;
+    window.zoomModule = window.Zoom || null;
 
     // Apply theme
     if (theme === 'dark') {
@@ -141,6 +142,23 @@
         resizeTimeout = setTimeout(fitCanvas, 80);
     });
 
+    // ===== Keyboard shortcuts =====
+    document.addEventListener('keydown', function(e) {
+        // Zoom shortcuts (Ctrl/Cmd + +, -, 0)
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+            if (e.key === '=' || e.key === '+') {
+                e.preventDefault();
+                if (window.Zoom) window.Zoom.zoomIn();
+            } else if (e.key === '-' || e.key === '_') {
+                e.preventDefault();
+                if (window.Zoom) window.Zoom.zoomOut();
+            } else if (e.key === '0') {
+                e.preventDefault();
+                if (window.Zoom) window.Zoom.resetZoom();
+            }
+        }
+    });
+
     // ===== Cleanup on unload =====
     window.addEventListener('beforeunload', () => {
         if (window.riveInstance) {
@@ -152,6 +170,11 @@
     // Setup playback controls
     if (window.Playback) {
         window.Playback.bindEvents(null); // Will be called with instance later
+    }
+
+    // Setup zoom controls
+    if (window.Zoom) {
+        window.Zoom.initControls();
     }
 
     // Start
