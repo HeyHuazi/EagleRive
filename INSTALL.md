@@ -35,10 +35,31 @@
 
 ## 技术说明
 
-- **缩略图**: 使用 Rive WebGL2 渲染器生成真实截图
-- **预览**: 使用本地 Rive Web 运行时（`@rive-app/webgl2@2.35.0`）
-- **离线支持**: 完全离线可用，无需网络连接
-- **兼容性**: 支持 macOS、Windows、Linux
+### 缩略图渲染策略
+
+缩略图使用本地 Rive WebGL2 渲染器生成真实截图，完全离线可用：
+
+**渲染流程**：
+1. 加载本地 Rive 运行时（`viewer/lib/rive.webgl2.js`，294KB）
+2. 创建离屏 canvas 并挂载到 DOM
+3. **拦截 `getContext`** 注入 `preserveDrawingBuffer: true`，让 Rive 渲染器自行创建 WebGL2 上下文并配置所需扩展
+4. 加载 .riv 文件，获取画板尺寸并调整 canvas
+5. 播放第一个状态机（无状态机时回退到第一个动画）
+6. 等待 **30 帧** `requestAnimationFrame` 确保羽化/模糊/圆角等高级效果渲染完成
+7. `toBlob()` 截图写入 PNG
+
+**关键技术点**：
+- **不预创建 WebGL2 上下文**：通过拦截 `getContext` 让 Rive 渲染器自行创建，确保所有 WebGL 扩展（羽化、模糊、圆角、混合模式等）被正确启用
+- **`autoBind: true`**：确保 Data Binding 的初始值正确应用
+- **`shouldDisableRiveListeners: true`**：优化性能，禁用不需要的 Rive 事件监听
+- **`enableRiveAssetCDN: false`**：强制使用本地资源，确保完全离线
+- **30 帧等待**：让 WebGL2 管线有足够时间完成复杂效果的合成
+
+### 预览功能
+
+- **渲染器**：使用本地 `@rive-app/webgl2@2.35.0`（与缩略图相同版本）
+- **离线支持**：完全离线可用，无需网络连接
+- **兼容性**：支持 macOS、Windows、Linux
 
 ## 故障排除
 

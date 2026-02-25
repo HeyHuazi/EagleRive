@@ -12,8 +12,10 @@ Eagle 格式扩展插件，为 `.riv`（运行时）和 `.rev`（编辑器备份
 
 ### 缩略图生成
 
-- 使用 `@rive-app/webgl2` 渲染器生成真实截图（状态机/动画第一帧）
-- 支持羽化、模糊、混合模式等高级视觉效果
+- 使用本地 `@rive-app/webgl2@2.35.0` 渲染器生成真实截图，完全离线可用
+- 优先渲染状态机第一帧，无状态机时回退到第一个动画
+- 通过拦截 `getContext` 确保 WebGL2 扩展正确启用（羽化、模糊、混合模式等）
+- 等待 30 帧让复杂视觉效果完全渲染
 - `.rev` 文件自动生成占位缩略图（运行时无法加载编辑器格式）
 - 渲染失败时自动降级为 SVG 占位图
 
@@ -125,12 +127,25 @@ npm install
 
 ### 缩略图截图流程
 
-1. 在 DOM 中创建离屏 canvas
-2. 预创建 WebGL2 上下文（`preserveDrawingBuffer: true`）
-3. 加载 Rive 文件，获取画板尺寸并调整 canvas
-4. 播放第一个状态机（或第一个动画）
-5. 等待 10 帧 `requestAnimationFrame` 确保渲染管线完成
-6. `toBlob()` 截图写入 PNG
+**技术实现**：
+
+1. 在 DOM 中创建离屏 canvas 并挂载
+2. **拦截 `getContext`** 注入 `preserveDrawingBuffer: true` 和 `antialias: true`
+   - **关键**：不预创建 WebGL2 上下文，让 Rive 渲染器自行创建
+   - 这样 Rive 能正确启用所有需要的 WebGL 扩展（羽化/模糊/圆角/混合模式等）
+3. 加载 Rive 文件（使用 `buffer` 参数）
+4. 配置渲染选项：
+   - `autoBind: true` - 确保 Data Binding 初始值正确应用
+   - `shouldDisableRiveListeners: true` - 禁用不需要的事件监听，优化性能
+   - `enableRiveAssetCDN: false` - 强制使用本地资源，确保完全离线
+5. 获取画板尺寸并调整 canvas 大小
+6. 播放第一个状态机（无状态机时回退到第一个动画）
+7. 等待 **30 帧** `requestAnimationFrame` 确保羽化/模糊/圆角等高级效果渲染完成
+8. `toBlob()` 截图写入 PNG
+
+**为什么是 30 帧？**
+- 羽化、模糊、混合模式等高级效果需要多帧才能完成 WebGL2 管线的合成
+- 30 帧（约 0.5-1 秒）能确保大多数复杂效果完全渲染
 
 ### 二进制解析（rive-util.js）
 
