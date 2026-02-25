@@ -1,0 +1,51 @@
+{
+  "viewer": {
+    "title": "Rive 查看器"
+  },
+  "fileInfo": {
+    "file": "文件",
+    "size": "尺寸",
+    "animations": "动画",
+    "stateMachines": "状态机",
+    "viewModels": "视图模型",
+    "artboard": "画板",
+    "loading": "加载中..."
+  },
+  "tabs": {
+    "stateMachine": "状态机",
+    "timeline": "时间线"
+  },
+  "controls": {
+    "background": "背景",
+    "select": "选择...",
+    "noViewModel": "无视图模型",
+    "dataBinding": "Data Binding",
+    "empty": "暂无内容"
+  },
+  "backgrounds": {
+    "white": "白色",
+    "black": "黑色",
+    "checker": "透明"
+  },
+  "shortcuts": {
+    "title": "键盘快捷键",
+    "close": "关闭",
+    "playPause": "播放/暂停",
+    "zoomIn": "放大",
+    "zoomOut": "缩小",
+    "zoomReset": "重置缩放",
+    "backgroundWhite": "白色背景",
+    "backgroundBlack": "黑色背景",
+    "backgroundChecker": "透明背景",
+    "toggleHelp": "切换帮助",
+    "speedUp": "加快速度",
+    "speedDown": "减慢速度",
+    "speedReset": "重置速度"
+  },
+  "performance": {
+    "fps": "帧率"
+  },
+  "speed": {
+    "label": "速度"
+  }
+}

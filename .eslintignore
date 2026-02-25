@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Third-party libraries
+viewer/lib/rive.webgl2.js
+
+# Generated files
+coverage/
+
+# Lock files
+package-lock.json

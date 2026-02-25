@@ -1,0 +1,51 @@
+{
+  "viewer": {
+    "title": "Rive Viewer"
+  },
+  "fileInfo": {
+    "file": "File",
+    "size": "Size",
+    "animations": "Animations",
+    "stateMachines": "State Machines",
+    "viewModels": "View Models",
+    "artboard": "Artboard",
+    "loading": "Loading..."
+  },
+  "tabs": {
+    "stateMachine": "State Machine",
+    "timeline": "Timeline"
+  },
+  "controls": {
+    "background": "Background",
+    "select": "Select...",
+    "noViewModel": "No View Model",
+    "dataBinding": "Data Binding",
+    "empty": "Empty"
+  },
+  "backgrounds": {
+    "white": "White",
+    "black": "Black",
+    "checker": "Transparent"
+  },
+  "shortcuts": {
+    "title": "Keyboard Shortcuts",
+    "close": "Close",
+    "playPause": "Play/Pause",
+    "zoomIn": "Zoom In",
+    "zoomOut": "Zoom Out",
+    "zoomReset": "Reset Zoom",
+    "backgroundWhite": "White Background",
+    "backgroundBlack": "Black Background",
+    "backgroundChecker": "Transparent Background",
+    "toggleHelp": "Toggle Help",
+    "speedUp": "Increase Speed",
+    "speedDown": "Decrease Speed",
+    "speedReset": "Reset Speed"
+  },
+  "performance": {
+    "fps": "FPS"
+  },
+  "speed": {
+    "label": "Speed"
+  }
+}

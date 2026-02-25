@@ -17,6 +17,9 @@ Thumbs.db
 dist/
 build/
 
+# Rive runtime (auto-copied by postinstall script)
+viewer/lib/rive.webgl2.js
+
 # Logs
 *.log
 npm-debug.log*

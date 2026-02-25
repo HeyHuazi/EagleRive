@@ -2,9 +2,10 @@
   "env": {
     "browser": true,
     "node": true,
-    "es2021": true
+    "es2021": true,
+    "jest": true
   },
-  "extends": "eslint:recommended",
+  "extends": ["eslint:recommended"],
   "parserOptions": {
     "ecmaVersion": 2021,
     "sourceType": "module"
@@ -15,10 +16,12 @@
       "argsIgnorePattern": "^_"
     }],
     "no-undef": "off",
+    "no-inner-declarations": "off",
+    "no-empty": "warn",
     "no-var": "warn",
     "prefer-const": "warn",
     "eqeqeq": ["warn", "always"],
-    "curly": ["warn", "all"],
+    "curly": ["warn", "multi-or-nest"],
     "brace-style": ["warn", "1tbs"],
     "indent": ["warn", 4],
     "quotes": ["warn", "single", {
