@@ -40,7 +40,6 @@ Eagle 格式扩展插件，为 `.riv`（运行时）和 `.rev`（编辑器备份
 - **深色/浅色主题**：跟随 Eagle 主题自动适配
 - **扁平化设计**：白色基底、轻阴影、清晰边框的现代界面风格
 - **默认 Contain + 居中**：画板自适应容器、垂直水平居中
-- **Remix Icon 图标**：统一精美的图标风格
 
 ### 侧边栏布局
 
@@ -109,9 +108,6 @@ npm install
 
 依赖：
 - `sharp`：SVG → PNG 转换（占位缩略图降级方案）
-
-资源：
-- 图标：[Glow UI Icons](https://www.glowui.com/icons)
 
 将插件目录安装到 Eagle：**设置 → 插件 → 安装插件** → 选择本目录。
 
@@ -245,7 +241,11 @@ A: 使用底部控制栏的速度滑块，范围 0.1x - 3.0x。
 
 - [Rive](https://rive.app/) - 强大的实时动画设计工具
 - [Eagle](https://en.eagle.cool/) - 优秀的设计素材管理工具
-- [Remix Icon](https://remixicon.com/) - 精美的开源图标库
+- [Glow UI Icons](https://www.glowui.com/icons) - 精美的图标资源库
+
+### 参考项目
+
+- [rive-rip](https://github.com/albertcai101/rive-rip) - Rive 动画资源提取工具
 
 ## 📮 联系方式
 
