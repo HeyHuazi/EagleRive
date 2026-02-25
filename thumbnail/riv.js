@@ -13,9 +13,7 @@ const fs = require('fs');
 const path = require('path');
 const { FileFormat, parseRiveFile, generateThumbnail } = require('./../js/rive-util.js');
 
-// Rive 运行时文件路径（相对于插件根目录）
-// Rive 运行时 CDN URL（测试方案 - 需要网络连接）
-const RIVE_CDN_URL = 'https://unpkg.com/@rive-app/webgl2@2.35.0';
+const RIVE_CDN = 'https://unpkg.com/@rive-app/webgl2@2.33.1';
 const MAX_SIZE = 400;
 const RENDER_TIMEOUT = 10000;
 
@@ -23,25 +21,12 @@ const RENDER_TIMEOUT = 10000;
  * 加载 Rive 运行时（首次加载后缓存到 window.rive，后续复用）
  */
 function loadRiveRuntime() {
-    if (typeof window !== 'undefined' && window.rive) {
-        console.log('[Rive Thumbnail] Rive 运行时已缓存');
-        return Promise.resolve();
-    }
-
-    console.log('[Rive Thumbnail] 开始从 CDN 加载 Rive 运行时...');
-    console.log('[Rive Thumbnail] CDN URL:', RIVE_CDN_URL);
-
+    if (typeof window !== 'undefined' && window.rive) return Promise.resolve();
     return new Promise((resolve, reject) => {
         const s = document.createElement('script');
-        s.src = RIVE_CDN_URL;
-        s.onload = () => {
-            console.log('[Rive Thumbnail] Rive 运行时加载成功');
-            resolve();
-        };
-        s.onerror = () => {
-            console.error('[Rive Thumbnail] Rive 运行时加载失败');
-            reject(new Error('Failed to load Rive runtime from CDN'));
-        };
+        s.src = RIVE_CDN;
+        s.onload = resolve;
+        s.onerror = () => reject(new Error('Failed to load Rive runtime'));
         document.head.appendChild(s);
     });
 }
@@ -115,8 +100,6 @@ async function renderFirstFrame(src, dest) {
                         const artH = bounds ? Math.round(bounds.maxY - bounds.minY) : MAX_SIZE;
                         const { w, h } = fitSize(artW, artH);
 
-                        console.log('[Rive Thumbnail] 画板尺寸:', { artW, artH, thumbnailW: w, thumbnailH: h });
-
                         // 按画板比例调整 canvas 尺寸
                         canvas.width = w;
                         canvas.height = h;
@@ -130,28 +113,21 @@ async function renderFirstFrame(src, dest) {
 
                         if (sms.length > 0) {
                             inst.play(sms[0]);
-                            console.log('[Rive Thumbnail] 播放状态机:', sms[0]);
                         } else if (anims.length > 0) {
                             inst.play(anims[0]);
-                            console.log('[Rive Thumbnail] 播放动画:', anims[0]);
                         } else {
                             inst.play();
-                            console.log('[Rive Thumbnail] 播放默认动画');
                         }
 
-                        // 等待更多帧让 WebGL2 管线完成羽化/模糊等效果的合成
-                        // 增加到 60 帧，确保复杂效果完全渲染
+                        // 等待多帧让 WebGL2 管线完成羽化/模糊等效果的合成
                         let frames = 0;
-                        const WAIT_FRAMES = 60;
+                        const WAIT_FRAMES = 10;
                         function waitFrame() {
                             frames++;
                             if (frames < WAIT_FRAMES) {
                                 requestAnimationFrame(waitFrame);
                                 return;
                             }
-
-                            console.log('[Rive Thumbnail] 渲染完成，帧数:', frames);
-
                             // 在 rAF 回调中直接截图（此时 Rive 刚完成本帧绘制，drawingBuffer 有效）
                             try {
                                 canvas.toBlob((blob) => {
@@ -160,7 +136,6 @@ async function renderFirstFrame(src, dest) {
                                         reject(new Error('toBlob returned null'));
                                         return;
                                     }
-                                    console.log('[Rive Thumbnail] 截图成功，大小:', blob.size);
                                     blob.arrayBuffer().then(buf => {
                                         resolve({
                                             width: w,
@@ -170,14 +145,12 @@ async function renderFirstFrame(src, dest) {
                                     });
                                 }, 'image/png');
                             } catch (e) {
-                                console.error('[Rive Thumbnail] 截图失败:', e);
                                 doCleanup();
                                 reject(e);
                             }
                         }
                         requestAnimationFrame(waitFrame);
                     } catch (e) {
-                        console.error('[Rive Thumbnail] 渲染过程出错:', e);
                         doCleanup();
                         reject(e);
                     }
@@ -199,24 +172,14 @@ async function renderFirstFrame(src, dest) {
 }
 
 module.exports = async ({ src, dest, item }) => {
-    console.log('[Rive Thumbnail] 开始生成缩略图:', src);
-
     const info = parseRiveFile(src);
 
     if (!info.isValid) {
         throw new Error('Invalid Rive file');
     }
 
-    console.log('[Rive Thumbnail] 文件信息:', {
-        format: info.format,
-        width: info.width,
-        height: info.height,
-        isRev: info.format === FileFormat.REV
-    });
-
     // .rev 文件：运行时无法加载，使用占位缩略图
     if (info.format === FileFormat.REV) {
-        console.log('[Rive Thumbnail] .rev 文件，使用占位缩略图');
         await generateThumbnail(src, dest, info);
         item.width = info.width || 500;
         item.height = info.height || 500;
@@ -226,13 +189,10 @@ module.exports = async ({ src, dest, item }) => {
 
     // .riv 文件：渲染状态机第一帧作为真实缩略图
     try {
-        console.log('[Rive Thumbnail] .riv 文件，尝试真实渲染');
         const dims = await renderFirstFrame(src, dest);
         item.width = dims.width;
         item.height = dims.height;
-        console.log('[Rive Thumbnail] 渲染成功:', dims);
     } catch (e) {
-        console.error('[Rive Thumbnail] 渲染失败，降级到占位缩略图:', e.message);
         // 渲染失败（离线、文件损坏等），降级到 SVG 占位缩略图
         await generateThumbnail(src, dest, info);
         item.width = info.width || 500;
