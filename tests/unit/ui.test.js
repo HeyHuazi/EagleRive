@@ -3,11 +3,11 @@
  */
 
 describe('UI module', () => {
-    let mockRiveInstance;
+  let mockRiveInstance;
 
-    beforeEach(() => {
-        // Setup DOM
-        document.body.innerHTML = `
+  beforeEach(() => {
+    // Setup DOM
+    document.body.innerHTML = `
             <div class="sidebar-tab" data-tab="timeline"></div>
             <div class="sidebar-tab" data-tab="statemachine"></div>
             <div class="panel" id="panel-timeline"></div>
@@ -27,255 +27,263 @@ describe('UI module', () => {
             <div id="overlay"></div>
         `;
 
-        // Mock Rive instance
-        mockRiveInstance = {
-            artboardNames: ['Artboard1', 'Artboard2'],
-            bounds: { minX: 0, minY: 0, maxX: 100, maxY: 100 },
-            animationNames: ['idle', 'walk'],
-            stateMachineNames: ['StateMachine1'],
-            viewModelCount: 1
-        };
+    // Mock Rive instance
+    mockRiveInstance = {
+      artboardNames: ['Artboard1', 'Artboard2'],
+      bounds: { minX: 0, minY: 0, maxX: 100, maxY: 100 },
+      animationNames: ['idle', 'walk'],
+      stateMachineNames: ['StateMachine1'],
+      viewModelCount: 1,
+    };
 
-        // Mock window modules
-        window.stateMachineModule = {
-            getCurrentSM: jest.fn(),
-            playSM: jest.fn(),
-            setCurrentSM: jest.fn()
-        };
+    // Mock window modules (note: the actual modules use Capitalized names)
+    window.StateMachine = {
+      getCurrentSM: jest.fn(),
+      playSM: jest.fn(),
+      setCurrentSM: jest.fn(),
+    };
 
-        window.animationModule = {
-            getCurrentAnim: jest.fn(),
-            playAnim: jest.fn(),
-            setCurrentAnim: jest.fn()
-        };
+    window.Animation = {
+      getCurrentAnim: jest.fn(),
+      playAnim: jest.fn(),
+      setCurrentAnim: jest.fn(),
+    };
 
-        window.dataBindingModule = {
-            populateViewModel: jest.fn()
-        };
+    window.DataBinding = {
+      populateViewModel: jest.fn(),
+    };
 
-        // Mock current file path
-        window.currentFilePath = '/path/to/file.riv';
+    // Set up module aliases (as done in app.js)
+    window.stateMachineModule = window.StateMachine;
+    window.animationModule = window.Animation;
+    window.dataBindingModule = window.DataBinding;
 
-        // Load UI module after DOM is setup
-        loadModule('ui.js');
+    // Mock current file path
+    window.currentFilePath = '/path/to/file.riv';
+
+    // Mock riveInstance (required by ui.js)
+    window.riveInstance = mockRiveInstance;
+
+    // Load UI module after DOM is setup
+    loadModule('ui.js');
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('setupTabs', () => {
+    it('should setup tab click handlers', () => {
+      const UI = window.UI;
+      UI.setupTabs(mockRiveInstance);
+
+      const timelineTab = document.querySelector('.sidebar-tab[data-tab="timeline"]');
+      const smTab = document.querySelector('.sidebar-tab[data-tab="statemachine"]');
+
+      expect(timelineTab).not.toBeNull();
+      expect(smTab).not.toBeNull();
     });
 
-    afterEach(() => {
-        jest.clearAllMocks();
+    it('should activate tab on click', () => {
+      const UI = window.UI;
+      UI.setupTabs(mockRiveInstance);
+
+      const timelineTab = document.querySelector('.sidebar-tab[data-tab="timeline"]');
+      timelineTab.click();
+
+      expect(timelineTab.classList.contains('active')).toBe(true);
+      expect(document.getElementById('panel-timeline').classList.contains('active')).toBe(true);
     });
 
-    describe('setupTabs', () => {
-        it('should setup tab click handlers', () => {
-            const UI = window.UI;
-            UI.setupTabs(mockRiveInstance);
+    it('should switch to state machine tab and play SM', () => {
+      window.StateMachine.getCurrentSM.mockReturnValue('StateMachine1');
+      const UI = window.UI;
+      UI.setupTabs(mockRiveInstance);
 
-            const timelineTab = document.querySelector('.sidebar-tab[data-tab="timeline"]');
-            const smTab = document.querySelector('.sidebar-tab[data-tab="statemachine"]');
+      const smTab = document.querySelector('.sidebar-tab[data-tab="statemachine"]');
+      smTab.click();
 
-            expect(timelineTab).not.toBeNull();
-            expect(smTab).not.toBeNull();
-        });
+      expect(window.StateMachine.playSM).toHaveBeenCalledWith(mockRiveInstance, 'StateMachine1');
+    });
+  });
 
-        it('should activate tab on click', () => {
-            const UI = window.UI;
-            UI.setupTabs(mockRiveInstance);
+  describe('setupBackgroundSwatches', () => {
+    it('should setup background swatch click handlers', () => {
+      const UI = window.UI;
+      UI.setupBackgroundSwatches();
 
-            const timelineTab = document.querySelector('.sidebar-tab[data-tab="timeline"]');
-            timelineTab.click();
-
-            expect(timelineTab.classList.contains('active')).toBe(true);
-            expect(document.getElementById('panel-timeline').classList.contains('active')).toBe(true);
-        });
-
-        it('should switch to state machine tab and play SM', () => {
-            window.stateMachineModule.getCurrentSM.mockReturnValue('StateMachine1');
-            const UI = window.UI;
-            UI.setupTabs(mockRiveInstance);
-
-            const smTab = document.querySelector('.sidebar-tab[data-tab="statemachine"]');
-            smTab.click();
-
-            expect(window.stateMachineModule.playSM).toHaveBeenCalledWith(mockRiveInstance, 'StateMachine1');
-        });
+      const checkerSwatch = document.querySelector('.bg-swatch[data-bg="checker"]');
+      expect(checkerSwatch).not.toBeNull();
     });
 
-    describe('setupBackgroundSwatches', () => {
-        it('should setup background swatch click handlers', () => {
-            const UI = window.UI;
-            UI.setupBackgroundSwatches();
+    it('should apply checker background on click', () => {
+      const UI = window.UI;
+      UI.setupBackgroundSwatches();
 
-            const checkerSwatch = document.querySelector('.bg-swatch[data-bg="checker"]');
-            expect(checkerSwatch).not.toBeNull();
-        });
+      const checkerSwatch = document.querySelector('.bg-swatch[data-bg="checker"]');
+      const container = document.getElementById('canvasContainer');
 
-        it('should apply checker background on click', () => {
-            const UI = window.UI;
-            UI.setupBackgroundSwatches();
+      checkerSwatch.click();
 
-            const checkerSwatch = document.querySelector('.bg-swatch[data-bg="checker"]');
-            const container = document.getElementById('canvasContainer');
-
-            checkerSwatch.click();
-
-            expect(checkerSwatch.classList.contains('active')).toBe(true);
-            expect(container.classList.contains('bg-checker')).toBe(true);
-        });
-
-        it('should apply white background on click', () => {
-            const UI = window.UI;
-            UI.setupBackgroundSwatches();
-
-            const whiteSwatch = document.querySelector('.bg-swatch[data-bg="white"]');
-            const container = document.getElementById('canvasContainer');
-
-            whiteSwatch.click();
-
-            expect(whiteSwatch.classList.contains('active')).toBe(true);
-            expect(container.classList.contains('bg-white')).toBe(true);
-        });
-
-        it('should apply black background on click', () => {
-            const UI = window.UI;
-            UI.setupBackgroundSwatches();
-
-            const blackSwatch = document.querySelector('.bg-swatch[data-bg="black"]');
-            const container = document.getElementById('canvasContainer');
-
-            blackSwatch.click();
-
-            expect(blackSwatch.classList.contains('active')).toBe(true);
-            expect(container.classList.contains('bg-black')).toBe(true);
-        });
+      expect(checkerSwatch.classList.contains('active')).toBe(true);
+      expect(container.classList.contains('bg-checker')).toBe(true);
     });
 
-    describe('setupArtboardSwitch', () => {
-        it('should hide artboard row when only one artboard', () => {
-            mockRiveInstance.artboardNames = ['Artboard1'];
-            const UI = window.UI;
+    it('should apply white background on click', () => {
+      const UI = window.UI;
+      UI.setupBackgroundSwatches();
 
-            UI.setupArtboardSwitch(mockRiveInstance);
+      const whiteSwatch = document.querySelector('.bg-swatch[data-bg="white"]');
+      const container = document.getElementById('canvasContainer');
 
-            const artboardRow = document.getElementById('artboardRow');
-            expect(artboardRow.style.display).toBe('none');
-        });
+      whiteSwatch.click();
 
-        it('should show artboard row when multiple artboards exist', () => {
-            const UI = window.UI;
-
-            UI.setupArtboardSwitch(mockRiveInstance);
-
-            const artboardRow = document.getElementById('artboardRow');
-            expect(artboardRow.style.display).toBe('');
-        });
-
-        it('should populate artboard select dropdown', () => {
-            const UI = window.UI;
-
-            UI.setupArtboardSwitch(mockRiveInstance);
-
-            const artboardSelect = document.getElementById('artboardSelect');
-            expect(artboardSelect.innerHTML).toContain('Artboard1');
-            expect(artboardSelect.innerHTML).toContain('Artboard2');
-        });
+      expect(whiteSwatch.classList.contains('active')).toBe(true);
+      expect(container.classList.contains('bg-white')).toBe(true);
     });
 
-    describe('populateFileInfo', () => {
-        it('should populate file name', () => {
-            const UI = window.UI;
+    it('should apply black background on click', () => {
+      const UI = window.UI;
+      UI.setupBackgroundSwatches();
 
-            UI.populateFileInfo(mockRiveInstance);
+      const blackSwatch = document.querySelector('.bg-swatch[data-bg="black"]');
+      const container = document.getElementById('canvasContainer');
 
-            const fileName = document.getElementById('fileName');
-            expect(fileName.textContent).toBe('file.riv');
-        });
+      blackSwatch.click();
 
-        it('should populate dimensions', () => {
-            const UI = window.UI;
+      expect(blackSwatch.classList.contains('active')).toBe(true);
+      expect(container.classList.contains('bg-black')).toBe(true);
+    });
+  });
 
-            UI.populateFileInfo(mockRiveInstance);
+  describe('setupArtboardSwitch', () => {
+    it('should hide artboard row when only one artboard', () => {
+      mockRiveInstance.artboardNames = ['Artboard1'];
+      const UI = window.UI;
 
-            const infoDims = document.getElementById('infoDims');
-            expect(infoDims.textContent).toBe('100 × 100');
-        });
+      UI.setupArtboardSwitch(mockRiveInstance);
 
-        it('should populate animation count', () => {
-            const UI = window.UI;
-
-            UI.populateFileInfo(mockRiveInstance);
-
-            const infoAnimCount = document.getElementById('infoAnimCount');
-            expect(infoAnimCount.textContent).toBe('2');
-        });
-
-        it('should populate state machine count', () => {
-            const UI = window.UI;
-
-            UI.populateFileInfo(mockRiveInstance);
-
-            const infoSMCount = document.getElementById('infoSMCount');
-            expect(infoSMCount.textContent).toBe('1');
-        });
-
-        it('should populate ViewModel count', () => {
-            const UI = window.UI;
-
-            UI.populateFileInfo(mockRiveInstance);
-
-            const infoVMCount = document.getElementById('infoVMCount');
-            expect(infoVMCount.textContent).toBe('1');
-        });
-
-        it('should handle missing bounds', () => {
-            mockRiveInstance.bounds = null;
-            const UI = window.UI;
-
-            UI.populateFileInfo(mockRiveInstance);
-
-            const infoDims = document.getElementById('infoDims');
-            expect(infoDims.textContent).toBe('-');
-        });
+      const artboardRow = document.getElementById('artboardRow');
+      expect(artboardRow.style.display).toBe('none');
     });
 
-    describe('showError', () => {
-        it('should display error message', () => {
-            const UI = window.UI;
+    it('should show artboard row when multiple artboards exist', () => {
+      const UI = window.UI;
 
-            UI.showError('Test error message');
+      UI.setupArtboardSwitch(mockRiveInstance);
 
-            const overlay = document.getElementById('overlay');
-            expect(overlay.innerHTML).toContain('Test error message');
-            expect(overlay.innerHTML).toContain('error-msg');
-        });
+      const artboardRow = document.getElementById('artboardRow');
+      expect(artboardRow.style.display).toBe('');
     });
 
-    describe('showRevNotice', () => {
-        it('should display .rev file notice', () => {
-            const UI = window.UI;
+    it('should populate artboard select dropdown', () => {
+      const UI = window.UI;
 
-            UI.showRevNotice();
+      UI.setupArtboardSwitch(mockRiveInstance);
 
-            const overlay = document.getElementById('overlay');
-            expect(overlay.innerHTML).toContain('.REV 文件');
-            expect(overlay.innerHTML).toContain('Rive 编辑器备份文件');
-            expect(overlay.innerHTML).toContain('Rive 编辑器');
-        });
-
-        it('should hide timeline tab for .rev files', () => {
-            const UI = window.UI;
-
-            UI.showRevNotice();
-
-            const timelineTab = document.querySelector('.sidebar-tab[data-tab="timeline"]');
-            expect(timelineTab.style.display).toBe('none');
-        });
-
-        it('should populate file name', () => {
-            const UI = window.UI;
-
-            UI.showRevNotice();
-
-            const fileName = document.getElementById('fileName');
-            expect(fileName.textContent).toBe('file.riv');
-        });
+      const artboardSelect = document.getElementById('artboardSelect');
+      expect(artboardSelect.innerHTML).toContain('Artboard1');
+      expect(artboardSelect.innerHTML).toContain('Artboard2');
     });
+  });
+
+  describe('populateFileInfo', () => {
+    it('should populate file name', () => {
+      const UI = window.UI;
+
+      UI.populateFileInfo(mockRiveInstance);
+
+      const fileName = document.getElementById('fileName');
+      expect(fileName.textContent).toBe('file.riv');
+    });
+
+    it('should populate dimensions', () => {
+      const UI = window.UI;
+
+      UI.populateFileInfo(mockRiveInstance);
+
+      const infoDims = document.getElementById('infoDims');
+      expect(infoDims.textContent).toBe('100 × 100');
+    });
+
+    it('should populate animation count', () => {
+      const UI = window.UI;
+
+      UI.populateFileInfo(mockRiveInstance);
+
+      const infoAnimCount = document.getElementById('infoAnimCount');
+      expect(infoAnimCount.textContent).toBe('2');
+    });
+
+    it('should populate state machine count', () => {
+      const UI = window.UI;
+
+      UI.populateFileInfo(mockRiveInstance);
+
+      const infoSMCount = document.getElementById('infoSMCount');
+      expect(infoSMCount.textContent).toBe('1');
+    });
+
+    it('should populate ViewModel count', () => {
+      const UI = window.UI;
+
+      UI.populateFileInfo(mockRiveInstance);
+
+      const infoVMCount = document.getElementById('infoVMCount');
+      expect(infoVMCount.textContent).toBe('1');
+    });
+
+    it('should handle missing bounds', () => {
+      mockRiveInstance.bounds = null;
+      const UI = window.UI;
+
+      UI.populateFileInfo(mockRiveInstance);
+
+      const infoDims = document.getElementById('infoDims');
+      expect(infoDims.textContent).toBe('-');
+    });
+  });
+
+  describe('showError', () => {
+    it('should display error message', () => {
+      const UI = window.UI;
+
+      UI.showError('Test error message');
+
+      const overlay = document.getElementById('overlay');
+      expect(overlay.innerHTML).toContain('Test error message');
+      expect(overlay.innerHTML).toContain('error-msg');
+    });
+  });
+
+  describe('showRevNotice', () => {
+    it('should display .rev file notice', () => {
+      const UI = window.UI;
+
+      UI.showRevNotice();
+
+      const overlay = document.getElementById('overlay');
+      expect(overlay.innerHTML).toContain('.REV 文件');
+      expect(overlay.innerHTML).toContain('Rive 编辑器备份文件');
+      expect(overlay.innerHTML).toContain('Rive 编辑器');
+    });
+
+    it('should hide timeline tab for .rev files', () => {
+      const UI = window.UI;
+
+      UI.showRevNotice();
+
+      const timelineTab = document.querySelector('.sidebar-tab[data-tab="timeline"]');
+      expect(timelineTab.style.display).toBe('none');
+    });
+
+    it('should populate file name', () => {
+      const UI = window.UI;
+
+      UI.showRevNotice();
+
+      const fileName = document.getElementById('fileName');
+      expect(fileName.textContent).toBe('file.riv');
+    });
+  });
 });

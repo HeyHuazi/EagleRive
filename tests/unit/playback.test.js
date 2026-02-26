@@ -1,197 +1,154 @@
 /**
  * Unit tests for Playback module
+ * Tests speed and direction control functionality
  */
 
 describe('Playback module', () => {
-    let mockRiveInstance;
-    let btnPlay, btnRestart, playLabel, icoPlay;
+  let mockRiveInstance;
 
-    beforeEach(() => {
-        // Setup DOM
-        document.body.innerHTML = `
-            <button id="btnPlay">
-                <span id="icoPlay"></span>
-                <span id="playLabel"></span>
-            </button>
-            <button id="btnRestart"></button>
+  beforeEach(() => {
+    // Setup DOM
+    document.body.innerHTML = `
+            <span id="speedDisplay"></span>
+            <input type="range" id="speedSlider" min="0.1" max="3" step="0.1" value="1">
+            <button id="directionBtn"></button>
         `;
 
-        btnPlay = document.getElementById('btnPlay');
-        btnRestart = document.getElementById('btnRestart');
-        playLabel = document.getElementById('playLabel');
-        icoPlay = document.getElementById('icoPlay');
+    // Mock Rive instance
+    mockRiveInstance = {
+      timeScale: 1.0,
+    };
+    window.riveInstance = mockRiveInstance;
 
-        // Mock Rive instance
-        mockRiveInstance = {
-            play: jest.fn(),
-            pause: jest.fn(),
-            reset: jest.fn()
-        };
+    // Load playback module after DOM is setup
+    loadModule('playback.js');
+  });
 
-        // Mock window modules
-        window.stateMachineModule = {
-            getCurrentSM: jest.fn()
-        };
+  afterEach(() => {
+    jest.clearAllMocks();
+    delete window.riveInstance;
+  });
 
-        window.animationModule = {
-            getCurrentAnim: jest.fn()
-        };
+  describe('Speed control', () => {
+    it('should set speed within valid range', () => {
+      const Playback = window.Playback;
 
-        // Load playback module after DOM is setup
-        loadModule('playback.js');
+      Playback.setSpeed(0.5);
+      expect(Playback.getSpeed()).toBe(0.5);
+
+      Playback.setSpeed(2.0);
+      expect(Playback.getSpeed()).toBe(2.0);
     });
 
-    afterEach(() => {
-        jest.clearAllMocks();
+    it('should clamp speed to minimum value', () => {
+      const Playback = window.Playback;
+
+      Playback.setSpeed(0.05);
+      expect(Playback.getSpeed()).toBe(0.1); // minSpeed
     });
 
-    describe('updatePlayIcon', () => {
-        it('should show pause icon when playing', () => {
-            const Playback = window.Playback;
-            Playback.setPlaying(true);
-            Playback.updatePlayIcon();
+    it('should clamp speed to maximum value', () => {
+      const Playback = window.Playback;
 
-            expect(playLabel.textContent).toBe('暂停');
-            expect(icoPlay.innerHTML).toContain('M6 4h4v16H6V4z');
-            expect(icoPlay.innerHTML).toContain('M14 4h4v16h-4V4z');
-        });
-
-        it('should show play icon when paused', () => {
-            const Playback = window.Playback;
-            Playback.setPlaying(false);
-            Playback.updatePlayIcon();
-
-            expect(playLabel.textContent).toBe('播放');
-            expect(icoPlay.innerHTML).toContain('M5 4l14 8-14 8V4z');
-        });
+      Playback.setSpeed(5.0);
+      expect(Playback.getSpeed()).toBe(3.0); // maxSpeed
     });
 
-    describe('togglePlayPause', () => {
-        it('should pause when playing', () => {
-            const Playback = window.Playback;
-            Playback.setPlaying(true);
+    it('should update speed display', () => {
+      const Playback = window.Playback;
+      const display = document.getElementById('speedDisplay');
 
-            Playback.togglePlayPause(mockRiveInstance);
+      Playback.setSpeed(1.5);
+      expect(display.textContent).toBe('150%');
 
-            expect(mockRiveInstance.pause).toHaveBeenCalled();
-            expect(Playback.isPlaying()).toBe(false);
-        });
-
-        it('should play when paused with state machine', () => {
-            const Playback = window.Playback;
-            window.stateMachineModule.getCurrentSM.mockReturnValue('StateMachine1');
-            Playback.setPlaying(false);
-
-            Playback.togglePlayPause(mockRiveInstance);
-
-            expect(mockRiveInstance.play).toHaveBeenCalledWith('StateMachine1');
-            expect(Playback.isPlaying()).toBe(true);
-        });
-
-        it('should play when paused with animation', () => {
-            const Playback = window.Playback;
-            window.animationModule.getCurrentAnim.mockReturnValue('idle');
-            window.stateMachineModule.getCurrentSM.mockReturnValue(null);
-            Playback.setPlaying(false);
-
-            Playback.togglePlayPause(mockRiveInstance);
-
-            expect(mockRiveInstance.play).toHaveBeenCalledWith('idle');
-            expect(Playback.isPlaying()).toBe(true);
-        });
-
-        it('should play default when no SM or anim', () => {
-            const Playback = window.Playback;
-            window.stateMachineModule.getCurrentSM.mockReturnValue(null);
-            window.animationModule.getCurrentAnim.mockReturnValue(null);
-            Playback.setPlaying(false);
-
-            Playback.togglePlayPause(mockRiveInstance);
-
-            expect(mockRiveInstance.play).toHaveBeenCalledWith();
-            expect(Playback.isPlaying()).toBe(true);
-        });
-
-        it('should do nothing when riveInstance is null', () => {
-            const Playback = window.Playback;
-            Playback.setPlaying(true);
-
-            Playback.togglePlayPause(null);
-
-            expect(mockRiveInstance.pause).not.toHaveBeenCalled();
-        });
+      Playback.setSpeed(2.0);
+      expect(display.textContent).toBe('200%');
     });
 
-    describe('restart', () => {
-        it('should restart with state machine', () => {
-            const Playback = window.Playback;
-            window.stateMachineModule.getCurrentSM.mockReturnValue('StateMachine1');
-            window.stateMachineModule.loadSMInputs = jest.fn();
+    it('should update speed slider value', () => {
+      const Playback = window.Playback;
+      const slider = document.getElementById('speedSlider');
 
-            Playback.restart(mockRiveInstance);
+      Playback.setSpeed(0.5);
+      expect(slider.value).toBe('0.5');
 
-            expect(mockRiveInstance.reset).toHaveBeenCalled();
-            expect(mockRiveInstance.play).toHaveBeenCalledWith('StateMachine1');
-            expect(Playback.isPlaying()).toBe(true);
-        });
-
-        it('should restart with animation', () => {
-            const Playback = window.Playback;
-            window.animationModule.getCurrentAnim.mockReturnValue('idle');
-            window.stateMachineModule.getCurrentSM.mockReturnValue(null);
-
-            Playback.restart(mockRiveInstance);
-
-            expect(mockRiveInstance.reset).toHaveBeenCalled();
-            expect(mockRiveInstance.play).toHaveBeenCalledWith('idle');
-            expect(Playback.isPlaying()).toBe(true);
-        });
-
-        it('should restart default when no SM or anim', () => {
-            const Playback = window.Playback;
-            window.stateMachineModule.getCurrentSM.mockReturnValue(null);
-            window.animationModule.getCurrentAnim.mockReturnValue(null);
-
-            Playback.restart(mockRiveInstance);
-
-            expect(mockRiveInstance.reset).toHaveBeenCalled();
-            expect(mockRiveInstance.play).toHaveBeenCalledWith();
-            expect(Playback.isPlaying()).toBe(true);
-        });
+      Playback.setSpeed(2.5);
+      expect(slider.value).toBe('2.5');
     });
 
-    describe('setPlaying', () => {
-        it('should set playing state', () => {
-            const Playback = window.Playback;
+    it('should apply time scale to Rive instance', () => {
+      const Playback = window.Playback;
 
-            Playback.setPlaying(false);
-            expect(Playback.isPlaying()).toBe(false);
+      Playback.setSpeed(2.0);
+      expect(mockRiveInstance.timeScale).toBe(2.0);
 
-            Playback.setPlaying(true);
-            expect(Playback.isPlaying()).toBe(true);
-        });
+      Playback.toggleDirection();
+      expect(mockRiveInstance.timeScale).toBe(-2.0);
+    });
+  });
+
+  describe('Direction control', () => {
+    it('should toggle direction from forward to backward', () => {
+      const Playback = window.Playback;
+
+      expect(Playback.getDirection()).toBe(1); // default forward
+
+      Playback.toggleDirection();
+      expect(Playback.getDirection()).toBe(-1);
     });
 
-    describe('isPlaying', () => {
-        it('should return current playing state', () => {
-            const Playback = window.Playback;
+    it('should toggle direction from backward to forward', () => {
+      const Playback = window.Playback;
 
-            Playback.setPlaying(true);
-            expect(Playback.isPlaying()).toBe(true);
-
-            Playback.setPlaying(false);
-            expect(Playback.isPlaying()).toBe(false);
-        });
+      Playback.toggleDirection(); // now backward
+      Playback.toggleDirection(); // back to forward
+      expect(Playback.getDirection()).toBe(1);
     });
 
-    describe('bindEvents', () => {
-        it('should be callable without errors', () => {
-            const Playback = window.Playback;
+    it('should update direction button appearance', () => {
+      const Playback = window.Playback;
+      const btn = document.getElementById('directionBtn');
 
-            // Just check it doesn't throw
-            expect(() => {
-                Playback.bindEvents(mockRiveInstance);
-            }).not.toThrow();
-        });
+      Playback.toggleDirection();
+      expect(btn.classList.contains('active')).toBe(true);
+      expect(btn.title).toBe('方向: 反向 (点击切换)');
+
+      Playback.toggleDirection();
+      expect(btn.classList.contains('active')).toBe(false);
+      expect(btn.title).toBe('方向: 正向 (点击切换)');
     });
+
+    it('should apply negative time scale when direction is backward', () => {
+      const Playback = window.Playback;
+
+      Playback.setSpeed(1.5);
+      Playback.toggleDirection();
+
+      expect(mockRiveInstance.timeScale).toBe(-1.5);
+    });
+  });
+
+  describe('applyTimeScale', () => {
+    it('should not throw when riveInstance is undefined', () => {
+      const Playback = window.Playback;
+      delete window.riveInstance;
+
+      expect(() => {
+        Playback.applyTimeScale();
+      }).not.toThrow();
+    });
+
+    it('should apply speed and direction to riveInstance', () => {
+      const Playback = window.Playback;
+
+      Playback.setSpeed(2.0);
+      expect(mockRiveInstance.timeScale).toBe(2.0);
+
+      Playback.toggleDirection();
+      expect(mockRiveInstance.timeScale).toBe(-2.0);
+
+      Playback.setSpeed(0.5);
+      expect(mockRiveInstance.timeScale).toBe(-0.5);
+    });
+  });
 });

@@ -16,6 +16,8 @@ Thumbs.db
 # Build outputs
 dist/
 build/
+EagleRive-*.zip
+EagleRive-*/
 
 # Rive runtime (auto-copied by postinstall script)
 viewer/lib/rive.webgl2.js
