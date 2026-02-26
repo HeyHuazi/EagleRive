@@ -10,27 +10,28 @@
  */
 
 const fs = require('fs');
+const fsPromises = fs.promises;
 const path = require('path');
 const { FileFormat, parseRiveFile, generateThumbnail } = require('./../js/rive-util.js');
 
 const RIVE_LOCAL = path.join(__dirname, '..', 'viewer', 'lib', 'rive.webgl2.js');
-const RIVE_WASM = path.join(__dirname, '..', 'viewer', 'lib', 'rive.wasm');
+const WASM_PATH = path.join(__dirname, '..', 'viewer', 'lib', 'rive.wasm');
 const MAX_SIZE = 400;
-const RENDER_TIMEOUT = 10000;
+const RENDER_TIMEOUT = 5000;
+const WAIT_FRAMES = 3;
 
 /**
  * 加载 Rive 运行时（本地文件，首次加载后缓存到 window.rive）
- * 配置使用本地 WASM 文件，避免从 CDN 加载
+ * 配置使用本地 WASM 文件（绝对路径），避免从 CDN 加载
  */
 function loadRiveRuntime() {
     if (typeof window !== 'undefined' && window.rive) return Promise.resolve();
     return new Promise((resolve, reject) => {
-        // 配置 Rive 使用本地 WASM 文件
         if (typeof window !== 'undefined') {
             window.rive = window.rive || {};
             window.rive.locateFile = (file) => {
                 if (file.endsWith('.wasm')) {
-                    return RIVE_WASM;
+                    return WASM_PATH;
                 }
                 return file;
             };
@@ -63,7 +64,7 @@ function fitSize(w, h) {
  *   3. 用 buffer 加载 .riv 文件
  *   4. 获取画板尺寸，按比例调整 canvas
  *   5. 优先播放第一个状态机，否则播放第一个动画
- *   6. 等待30帧渲染后 toBlob() 截图
+ *   6. 等待渲染帧后 toBlob() 截图
  *   7. 写入 dest 路径
  *
  * 关键：不预创建 WebGL2 上下文，让 Rive 渲染器自行创建并配置所需的
@@ -71,11 +72,14 @@ function fitSize(w, h) {
  * 通过拦截 getContext 注入 preserveDrawingBuffer: true 以支持 toBlob() 截图。
  */
 async function renderFirstFrame(src, dest) {
+    console.log('[Rive Thumbnail] Starting render for:', src);
     await loadRiveRuntime();
+    console.log('[Rive Thumbnail] Runtime loaded');
 
-    // 读取 .riv 文件为 ArrayBuffer
-    const fileBuffer = fs.readFileSync(src);
+    // 异步读取 .riv 文件为 ArrayBuffer（不阻塞主线程）
+    const fileBuffer = await fsPromises.readFile(src);
     const arrayBuffer = new Uint8Array(fileBuffer).buffer;
+    console.log('[Rive Thumbnail] File loaded, size:', fileBuffer.length, 'bytes');
 
     // 创建离屏 canvas 并挂载到 DOM（Rive 需要 canvas 在 DOM 中）
     const canvas = document.createElement('canvas');
@@ -118,12 +122,6 @@ async function renderFirstFrame(src, dest) {
                 autoBind: true,
                 shouldDisableRiveListeners: true,
                 enableRiveAssetCDN: false,
-                locateFile: (file) => {
-                    if (file.endsWith('.wasm')) {
-                        return RIVE_WASM;
-                    }
-                    return file;
-                },
                 layout: new rive.Layout({
                     fit: rive.Fit.Contain,
                     alignment: rive.Alignment.Center,
@@ -160,9 +158,8 @@ async function renderFirstFrame(src, dest) {
                                     inst.play(anims[0]);
                                 }
 
-                                // 等待多帧让 WebGL2 管线完成羽化/模糊/圆角等效果的合成
+                                // 等待渲染帧让 WebGL2 管线完成渲染
                                 let frames = 0;
-                                const WAIT_FRAMES = 30;
                                 function waitFrame() {
                                     frames++;
                                     if (frames < WAIT_FRAMES) {
@@ -172,17 +169,21 @@ async function renderFirstFrame(src, dest) {
                                     // 在 rAF 回调中直接截图（此时 Rive 刚完成本帧绘制，drawingBuffer 有效）
                                     try {
                                         canvas.toBlob((blob) => {
-                                            doCleanup();
                                             if (!blob) {
+                                                doCleanup();
                                                 reject(new Error('toBlob returned null'));
                                                 return;
                                             }
                                             blob.arrayBuffer().then(buf => {
+                                                doCleanup();
                                                 resolve({
                                                     width: w,
                                                     height: h,
                                                     data: Buffer.from(buf),
                                                 });
+                                            }).catch(err => {
+                                                doCleanup();
+                                                reject(err);
                                             });
                                         }, 'image/png');
                                     } catch (e) {
@@ -205,10 +206,18 @@ async function renderFirstFrame(src, dest) {
             });
         });
 
-        // 写入 PNG 文件
-        fs.writeFileSync(dest, result.data);
+        // 异步写入 PNG 文件（不阻塞主线程）
+        await fsPromises.writeFile(dest, result.data);
         return { width: result.width, height: result.height };
     } finally {
+        // 显式释放 WebGL 上下文（防止批量生成时上下文耗尽）
+        try {
+            const gl = origGetContext('webgl2') || origGetContext('webgl');
+            if (gl) {
+                const ext = gl.getExtension('WEBGL_lose_context');
+                if (ext) ext.loseContext();
+            }
+        } catch (e) { /* ignore */ }
         // 清理 DOM
         if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
     }

@@ -13,9 +13,12 @@ Eagle 格式扩展插件，为 `.riv`（运行时）和 `.rev`（编辑器备份
 ### 缩略图生成
 
 - 使用本地 `@rive-app/webgl2@2.35.0` 渲染器生成真实截图，完全离线可用
+- 通过 `RuntimeLoader.setWasmUrl()` + `file://` URL 定位本地 WASM，Emscripten 自动使用 XHR 加载
+- 运行时首次加载后缓存，后续缩略图生成复用
 - 优先渲染状态机第一帧，无状态机时回退到第一个动画
-- 通过拦截 `getContext` 确保 WebGL2 扩展正确启用（羽化、模糊、混合模式等）
-- 等待 30 帧让复杂视觉效果完全渲染
+- 预创建 WebGL2 上下文（`preserveDrawingBuffer: true`），支持 `toBlob()` 截图
+- 异步文件 I/O，不阻塞 Eagle 主线程
+- 显式释放 WebGL 上下文，支持批量生成缩略图
 - `.rev` 文件自动生成占位缩略图（运行时无法加载编辑器格式）
 - 渲染失败时自动降级为 SVG 占位图
 
@@ -23,7 +26,7 @@ Eagle 格式扩展插件，为 `.riv`（运行时）和 `.rev`（编辑器备份
 
 - **WebGL2 渲染**：使用 `@rive-app/webgl2` 渲染器，完整支持羽化/模糊等高级效果
 - **完全离线可用**：Rive 运行时已包含在插件中，无需网络连接
-- **多画板切换**：多画板文件自动显示画板选择器
+- **多画板切换**：多画板文件自动显示画板选择器，切换时复用缓存的文件 buffer（毫秒级响应）
 - **播放控制**：
   - 状态机与时间线模式智能切换
   - 播放/暂停、重新播放按钮
@@ -34,7 +37,7 @@ Eagle 格式扩展插件，为 `.riv`（运行时）和 `.rev`（编辑器备份
   - 放大、缩小、重置缩放按钮
   - 鼠标滚轮缩放（Ctrl + 滚轮）
   - 按住空格键拖动平移画布
-- **性能监控**：右上角实时显示 FPS，彩色指示（绿/橙/红）
+- **性能监控**：右上角实时显示 FPS，彩色指示（绿/橙/红），页面不可见时自动暂停
 - **快捷键帮助**：点击右下角 ? 按钮查看所有快捷键
 - **背景切换**：透明棋盘格、白色、黑色三种背景（位于控制栏左侧）
 - **深色/浅色主题**：跟随 Eagle 主题自动适配
@@ -115,33 +118,33 @@ npm install
 
 ### 渲染器
 
-缩略图和预览均使用 `@rive-app/webgl2@2.35.0`（WebGL2 渲染器），支持：
-- 羽化（Feather）
-- 模糊（Blur）
-- 混合模式（Blend Modes）
-- 其他需要 GPU 加速的视觉效果
+- 缩略图和预览均使用本地 `@rive-app/webgl2@2.35.0`（完全离线可用）
+- 支持：羽化、模糊、混合模式等需要 GPU 加速的视觉效果
 
 ### 缩略图截图流程
 
 **技术实现**：
 
-1. 在 DOM 中创建离屏 canvas 并挂载
-2. **拦截 `getContext`** 注入 `preserveDrawingBuffer: true` 和 `antialias: true`
-   - **关键**：不预创建 WebGL2 上下文，让 Rive 渲染器自行创建
-   - 这样 Rive 能正确启用所有需要的 WebGL 扩展（羽化/模糊/圆角/混合模式等）
-3. 加载 Rive 文件（使用 `buffer` 参数）
-4. 配置渲染选项：
-   - `autoBind: true` - 确保 Data Binding 初始值正确应用
-   - `shouldDisableRiveListeners: true` - 禁用不需要的事件监听，优化性能
-   - `enableRiveAssetCDN: false` - 强制使用本地资源，确保完全离线
+1. 加载本地 Rive 运行时（`rive.webgl2.js`，首次加载后缓存到 `window.rive`）
+2. 通过 `RuntimeLoader.setWasmUrl(file://...)` 设置本地 WASM 路径
+   - `file://` URL 会被 Emscripten 通过 XMLHttpRequest 加载（非 fetch），确保在 Electron 中可用
+   - 必须在任何 Rive 实例创建之前调用
+3. 在 DOM 中创建离屏 canvas，预创建 WebGL2 上下文（`preserveDrawingBuffer: true`）
+4. 异步读取 Rive 文件（`fs.promises.readFile`，不阻塞主线程）
 5. 获取画板尺寸并调整 canvas 大小
 6. 播放第一个状态机（无状态机时回退到第一个动画）
-7. 等待 **30 帧** `requestAnimationFrame` 确保羽化/模糊/圆角等高级效果渲染完成
-8. `toBlob()` 截图写入 PNG
+7. 等待 10 帧渲染，确保羽化/模糊等高级效果渲染完成
+8. `toBlob()` 截图，数据完全提取后再清理 Rive 实例
+9. 异步写入 PNG（`fs.promises.writeFile`）
+10. 显式释放 WebGL 上下文（`WEBGL_lose_context`），防止批量生成时上下文耗尽
+11. 渲染失败时自动降级为 SVG 占位缩略图
 
-**为什么是 30 帧？**
-- 羽化、模糊、混合模式等高级效果需要多帧才能完成 WebGL2 管线的合成
-- 30 帧（约 0.5-1 秒）能确保大多数复杂效果完全渲染
+### 预览加载优化
+
+- JS 模块使用 `defer` 加载，不阻塞 HTML 解析
+- WASM 通过 `<link rel="preload">` 预加载，与 JS 并行下载
+- 文件首次加载后缓存 ArrayBuffer，画板切换时复用（毫秒级响应）
+- FPS 监控在页面不可见时自动暂停，减少 CPU 空转
 
 ### 二进制解析（rive-util.js）
 

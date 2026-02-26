@@ -98,11 +98,9 @@ const UI = (function() {
     }
 
     /**
-     * Switch artboard
+     * Switch artboard (复用缓存的 buffer，避免重新 fetch 文件)
      */
     function switchArtboard(riveInstance, name) {
-        const filePath = window.currentFilePath;
-
         if (riveInstance) riveInstance.cleanup();
 
         // Reset current SM and anim
@@ -113,55 +111,14 @@ const UI = (function() {
             window.animationModule.setCurrentAnim(null);
         }
 
-        const defaultLayout = new rive.Layout({
-            fit: rive.Fit.Contain,
-            alignment: rive.Alignment.Center
-        });
-
-        riveInstance = new rive.Rive({
-            src: filePath,
-            canvas: document.getElementById('riveCanvas'),
-            artboard: name,
-            autoplay: false,
-            autoBind: true,
-            layout: defaultLayout,
-            onLoad: () => {
-                riveInstance.resizeDrawingSurfaceToCanvas();
-
-                try {
-                    if (window.animationModule) {
-                        window.animationModule.populateAnimations(riveInstance);
-                    }
-                } catch (e) { console.error('[Rive] switchArtboard populateAnimations error:', e); }
-
-                try {
-                    if (window.stateMachineModule) {
-                        window.stateMachineModule.populateStateMachines(riveInstance);
-                    }
-                } catch (e) { console.error('[Rive] switchArtboard populateStateMachines error:', e); }
-
-                try {
-                    if (window.dataBindingModule) {
-                        window.dataBindingModule.populateViewModel(riveInstance);
-                    }
-                } catch (e) { console.error('[Rive] switchArtboard populateViewModel error:', e); }
-
-                // Start playback if no SM or anim
-                const curSM = window.stateMachineModule ? window.stateMachineModule.getCurrentSM() : null;
-                const curAnim = window.animationModule ? window.animationModule.getCurrentAnim() : null;
-
-                if (!curSM && !curAnim) {
-                    riveInstance.play();
-                }
-            },
-        });
+        // 使用 app.js 暴露的 createRiveInstance 和缓存的 buffer
+        if (window.createRiveInstance && window.cachedRiveBuffer) {
+            window.createRiveInstance(window.cachedRiveBuffer, name);
+        }
 
         if (window.playbackModule) {
             window.playbackModule.setPlaying(true);
         }
-
-        // Update global instance reference
-        window.riveInstance = riveInstance;
     }
 
     /**

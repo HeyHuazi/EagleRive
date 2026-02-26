@@ -6,16 +6,10 @@
     'use strict';
 
     // ===== Configure Rive to use local WASM file =====
-    // This prevents loading from CDN and improves load time
-    if (typeof window !== 'undefined' && !window.rive) {
-        window.rive = {
-            locateFile: (file) => {
-                if (file.endsWith('.wasm')) {
-                    return './lib/rive.wasm';
-                }
-                return file;
-            }
-        };
+    // rive.webgl2.js 是 UMD 模块，加载后 window.rive 被设置为 SDK 导出对象
+    // 通过 RuntimeLoader.setWasmUrl() 设置本地 WASM URL（而非被覆盖的 locateFile）
+    if (window.rive && window.rive.RuntimeLoader) {
+        window.rive.RuntimeLoader.setWasmUrl('./lib/rive.wasm');
     }
 
     // ===== Params =====
@@ -26,6 +20,7 @@
     // Store for global access
     window.currentFilePath = filePath;
     window.riveInstance = null;
+    window.cachedRiveBuffer = null;
 
     // Setup module references early (before any module code runs)
     window.stateMachineModule = window.StateMachine || null;
@@ -79,37 +74,50 @@
 
         fitCanvas();
 
-        window.riveInstance = new rive.Rive({
-            src: filePath,
+        // 先 fetch 文件为 ArrayBuffer 并缓存，后续画板切换可复用
+        fetch(filePath)
+            .then(function(resp) { return resp.arrayBuffer(); })
+            .then(function(buffer) {
+                window.cachedRiveBuffer = buffer;
+                createRiveInstance(buffer);
+            })
+            .catch(function() {
+                if (window.UI) {
+                    window.UI.showError('Rive 文件加载失败');
+                }
+            });
+    }
+
+    function createRiveInstance(buffer, artboardName) {
+        var opts = {
+            buffer: buffer,
             canvas: canvas,
             autoplay: false,
             autoBind: true,
-            locateFile: (file) => {
-                if (file.endsWith('.wasm')) {
-                    return './lib/rive.wasm';
-                }
-                return file;
-            },
             layout: defaultLayout,
-            onLoad: () => {
+            onLoad: function() {
                 overlay.classList.add('hidden');
                 window.riveInstance.resizeDrawingSurfaceToCanvas();
                 populateUI();
 
                 // Start playback if no SM or anim
-                const curSM = window.stateMachineModule ? window.stateMachineModule.getCurrentSM() : null;
-                const curAnim = window.animationModule ? window.animationModule.getCurrentAnim() : null;
+                var curSM = window.stateMachineModule ? window.stateMachineModule.getCurrentSM() : null;
+                var curAnim = window.animationModule ? window.animationModule.getCurrentAnim() : null;
 
                 if (!curSM && !curAnim) {
                     window.riveInstance.play();
                 }
             },
-            onLoadError: () => {
+            onLoadError: function() {
                 if (window.UI) {
                     window.UI.showError('Rive 文件加载失败');
                 }
             },
-        });
+        };
+        if (artboardName) {
+            opts.artboard = artboardName;
+        }
+        window.riveInstance = new rive.Rive(opts);
     }
 
     /**
@@ -226,6 +234,9 @@
     } catch (e) {
         console.error('[App] Shortcuts init error:', e);
     }
+
+    // Expose createRiveInstance for artboard switching
+    window.createRiveInstance = createRiveInstance;
 
     // Start
     initRive();

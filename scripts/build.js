@@ -76,10 +76,10 @@ console.log('\n📝 Updating HTML file...');
 const htmlPath = path.join(distDir, 'viewer', 'riv.html');
 let htmlContent = fs.readFileSync(htmlPath, 'utf8');
 
-// 只替换 CSS 链接（不替换 JavaScript）
+// 只替换 CSS 链接（不替换 JavaScript），保留 WASM preload
 htmlContent = htmlContent.replace(
     /<!-- CSS -->[\s\S]*?<\/head>/,
-    '<!-- CSS -->\n    <link rel="stylesheet" href="./css/merged.css">\n</head>'
+    '<!-- CSS -->\n    <link rel="stylesheet" href="./css/merged.css">\n    <!-- 预加载 WASM（与 JS 并行下载） -->\n    <link rel="preload" href="./lib/rive.wasm" as="fetch" crossorigin>\n</head>'
 );
 
 fs.writeFileSync(htmlPath, htmlContent);

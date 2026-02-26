@@ -101,6 +101,15 @@
             setTimeout(() => {
                 start();
             }, 100);
+
+            // 页面不可见时暂停 FPS 监控，减少空转 CPU 占用
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    stop();
+                } else {
+                    start();
+                }
+            });
         } catch (e) {
             console.error('[Performance] Initialization error:', e);
         }
