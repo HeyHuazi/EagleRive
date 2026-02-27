@@ -44,5 +44,16 @@ coverage/
 *.tmp
 *.temp
 
+# Temporary documentation
+PLUGIN_OPTIMIZATION_PLAN.md
+docs/OPTIMIZATION_SUMMARY.md
+docs/THUMBNAIL_FIX_ANALYSIS.md
+
+# Source assets (copied to viewer/ during build)
+sources/
+
+# Empty directories
+skills/
+
 # Claude settings (may contain sensitive data)
 .claude/settings.local.json
