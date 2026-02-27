@@ -1,6 +1,6 @@
 {
   "name": "eagle-plugin-rive",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Eagle format extension plugin for Rive files (.riv and .rev)",
   "main": "index.js",
   "scripts": {
