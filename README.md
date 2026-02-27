@@ -3,7 +3,7 @@
 > 🎨 为 Eagle 添加 Rive 动画文件预览功能，支持 `.riv` 和 `.rev` 格式
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-3.0.0-green.svg)](https://github.com/yourusername/EagleRive)
+[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/yourusername/EagleRive)
 [![Tests](https://img.shields.io/badge/tests-85%20passing-brightgreen.svg)](https://github.com/yourusername/EagleRive)
 
 Eagle 格式扩展插件，为 `.riv`（运行时）和 `.rev`（编辑器备份）文件提供缩略图生成与交互式预览。
@@ -172,15 +172,17 @@ npm run test:coverage
 
 ## 📋 版本历史
 
-### v3.0.0 (2026-02-25)
+### v1.0.0 (2026-02-27)
 
 **新功能**
 
+- ✨ Poison Loader 加载动画（来自 Rive Marketplace）
 - ✨ 快捷键帮助面板（点击 ? 按钮查看）
 - ✨ FPS 实时监控（右上角彩色指示：绿/橙/红）
 - ✨ 动画速度控制（0.1x - 3.0x 滑块）
 - 🎨 优化控制栏布局（背景左侧 | 缩放+帮助右侧）
 - 🎨 统一使用 Glow UI Icons
+- 🎨 根据 DPR 动态设置 Canvas 分辨率，支持高分屏
 
 **修复**
 
@@ -196,7 +198,7 @@ npm run test:coverage
 - 📈 86.48% 代码覆盖率
 - 📝 完善项目文档（用户手册、架构文档、测试文档）
 
-### v2.0.0
+### v0.2.0
 
 **新功能**
 
@@ -207,7 +209,7 @@ npm run test:coverage
 - ✨ 快捷键支持（Ctrl+0/+/−、Space+拖动）
 - ✨ 背景切换（白色/黑色/透明棋盘格）
 
-### v1.0.0
+### v0.1.0
 
 **初始版本**
 
