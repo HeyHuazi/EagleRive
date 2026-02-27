@@ -15,6 +15,11 @@
     "stateMachine": "状态机",
     "timeline": "时间线"
   },
+  "stateMachine": {
+    "triggers": "触发器",
+    "booleans": "布尔值",
+    "numbers": "数值"
+  },
   "controls": {
     "background": "背景",
     "select": "选择...",
@@ -29,7 +34,9 @@
   },
   "shortcuts": {
     "title": "键盘快捷键",
+    "panel": "快捷键",
     "close": "关闭",
+    "help": "快捷键帮助",
     "playPause": "播放/暂停",
     "zoomIn": "放大",
     "zoomOut": "缩小",
@@ -40,12 +47,45 @@
     "toggleHelp": "切换帮助",
     "speedUp": "加快速度",
     "speedDown": "减慢速度",
-    "speedReset": "重置速度"
+    "speedReset": "重置速度",
+    "desc": {
+      "resetZoom": "重置缩放",
+      "zoomIn": "放大",
+      "zoomOut": "缩小",
+      "pan": "平移画布",
+      "scrollZoom": "缩放"
+    },
+    "keys": {
+      "resetZoom": "Ctrl+0",
+      "zoomIn": "Ctrl++",
+      "zoomOut": "Ctrl+-",
+      "pan": "按住 Space + 拖动",
+      "scrollZoom": "Ctrl + 滚轮"
+    }
   },
   "performance": {
     "fps": "帧率"
   },
   "speed": {
     "label": "速度"
+  },
+  "errors": {
+    "noFilePath": "未指定文件路径",
+    "loadFailed": "Rive 文件加载失败",
+    "viewModelLoadFailed": "无法加载视图模型实例",
+    "viewModelError": "错误："
+  },
+  "messages": {
+    "noAnimations": "暂无动画",
+    "noStateMachines": "暂无状态机",
+    "noProperties": "暂无属性",
+    "noSupportedProperties": "暂无支持的属性",
+    "defaultViewModel": "默认视图模型",
+    "viewModel": "视图模型",
+    "nestedViewModel": "嵌套视图模型",
+    "revNotice": "Rive 运行时无法预览此文件。<br><br>如需预览动画，请在 Rive 编辑器中打开并导出 .riv（运行时）文件。",
+    "revBadge": ".REV 文件",
+    "revTitle": "Rive 编辑器备份文件",
+    "openEditor": "打开 Rive 编辑器"
   }
 }

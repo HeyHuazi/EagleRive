@@ -13,7 +13,8 @@ const Animation = (function() {
         const list = document.getElementById('animList');
 
         if (!anims.length) {
-            list.innerHTML = '<div class="empty">暂无动画</div>';
+            const noAnimText = window.i18n ? window.i18n.t('messages.noAnimations') : '暂无动画';
+            list.innerHTML = '<div class="empty">' + noAnimText + '</div>';
             return;
         }
 
@@ -24,19 +25,27 @@ const Animation = (function() {
 
         list.querySelectorAll('.item').forEach(function(el) {
             el.addEventListener('click', function() {
-                list.querySelectorAll('.item').forEach(function(x) { x.classList.remove('active'); });
+                list.querySelectorAll('.item').forEach(function(x) {
+                    x.classList.remove('active'); 
+                });
                 el.classList.add('active');
 
                 // Stop current state machine if running
-                var curSM = window.stateMachineModule ? window.stateMachineModule.getCurrentSM() : null;
+                const curSM = window.stateMachineModule ? window.stateMachineModule.getCurrentSM() : null;
                 if (curSM) {
-                    try { riveInstance.stop(curSM); } catch (e) {}
+                    try {
+                        riveInstance.stop(curSM); 
+                    } catch (e) {}
                 }
+                
 
                 // Stop current animation
                 if (currentAnim) {
-                    try { riveInstance.stop(currentAnim); } catch (e) {}
+                    try {
+                        riveInstance.stop(currentAnim); 
+                    } catch (e) {}
                 }
+                
 
                 currentAnim = el.dataset.anim;
                 riveInstance.play(currentAnim);
@@ -45,16 +54,18 @@ const Animation = (function() {
     }
 
     function playAnim(riveInstance, name) {
-        if (name) {
+        if (name) 
             riveInstance.play(name);
-        }
+        
     }
 
     return {
         populateAnimations,
         playAnim,
         getCurrentAnim: () => currentAnim,
-        setCurrentAnim: (anim) => { currentAnim = anim; }
+        setCurrentAnim: (anim) => {
+            currentAnim = anim; 
+        }
     };
 })();
 

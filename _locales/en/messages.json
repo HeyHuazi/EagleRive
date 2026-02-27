@@ -15,6 +15,11 @@
     "stateMachine": "State Machine",
     "timeline": "Timeline"
   },
+  "stateMachine": {
+    "triggers": "Triggers",
+    "booleans": "Booleans",
+    "numbers": "Numbers"
+  },
   "controls": {
     "background": "Background",
     "select": "Select...",
@@ -29,7 +34,9 @@
   },
   "shortcuts": {
     "title": "Keyboard Shortcuts",
+    "panel": "Keyboard Shortcuts",
     "close": "Close",
+    "help": "Keyboard Shortcuts Help",
     "playPause": "Play/Pause",
     "zoomIn": "Zoom In",
     "zoomOut": "Zoom Out",
@@ -40,12 +47,45 @@
     "toggleHelp": "Toggle Help",
     "speedUp": "Increase Speed",
     "speedDown": "Decrease Speed",
-    "speedReset": "Reset Speed"
+    "speedReset": "Reset Speed",
+    "desc": {
+      "resetZoom": "Reset Zoom",
+      "zoomIn": "Zoom In",
+      "zoomOut": "Zoom Out",
+      "pan": "Pan Canvas",
+      "scrollZoom": "Zoom"
+    },
+    "keys": {
+      "resetZoom": "Ctrl+0",
+      "zoomIn": "Ctrl++",
+      "zoomOut": "Ctrl+-",
+      "pan": "Hold Space + Drag",
+      "scrollZoom": "Ctrl + Scroll"
+    }
   },
   "performance": {
     "fps": "FPS"
   },
   "speed": {
     "label": "Speed"
+  },
+  "errors": {
+    "noFilePath": "File path not specified",
+    "loadFailed": "Failed to load Rive file",
+    "viewModelLoadFailed": "Unable to load ViewModel instance",
+    "viewModelError": "Error: "
+  },
+  "messages": {
+    "noAnimations": "No animations",
+    "noStateMachines": "No state machines",
+    "noProperties": "No properties",
+    "noSupportedProperties": "No supported properties",
+    "defaultViewModel": "Default ViewModel",
+    "viewModel": "ViewModel",
+    "nestedViewModel": "Nested ViewModel",
+    "revNotice": "Rive runtime cannot preview this file.<br><br>To preview animations, please open in Rive Editor and export .riv (runtime) file.",
+    "revBadge": ".REV FILE",
+    "revTitle": "Rive Editor Backup File",
+    "openEditor": "Open Rive Editor"
   }
 }

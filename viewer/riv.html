@@ -30,13 +30,24 @@
           <div class="controls-bar">
             <!-- Background controls (left) -->
             <div class="bg-controls">
-              <span class="bg-label">背景</span>
+              <span class="bg-label" data-i18n="controls.background">背景</span>
               <div class="bg-swatches">
-                <div class="bg-swatch bg-swatch-white" data-bg="white" title="白色"></div>
-                <div class="bg-swatch bg-swatch-black" data-bg="black" title="黑色"></div>
+                <div
+                  class="bg-swatch bg-swatch-white"
+                  data-bg="white"
+                  data-i18n-title="backgrounds.white"
+                  title="白色"
+                ></div>
+                <div
+                  class="bg-swatch bg-swatch-black"
+                  data-bg="black"
+                  data-i18n-title="backgrounds.black"
+                  title="黑色"
+                ></div>
                 <div
                   class="bg-swatch bg-swatch-checker active"
                   data-bg="checker"
+                  data-i18n-title="backgrounds.checker"
                   title="透明"
                 ></div>
               </div>
@@ -94,33 +105,33 @@
           <div class="file-info" id="fileInfo">
             <div class="info-row">
               <div class="info-item">
-                <span class="info-label">文件</span>
-                <span class="info-value" id="fileName">加载中...</span>
+                <span class="info-label" data-i18n="fileInfo.file">文件</span>
+                <span class="info-value" id="fileName" data-i18n="fileInfo.loading">加载中...</span>
               </div>
             </div>
             <div class="info-row">
               <div class="info-item">
-                <span class="info-label">尺寸</span>
+                <span class="info-label" data-i18n="fileInfo.size">尺寸</span>
                 <span class="info-value" id="infoDims">-</span>
               </div>
               <div class="info-item">
-                <span class="info-label">动画</span>
+                <span class="info-label" data-i18n="fileInfo.animations">动画</span>
                 <span class="info-value" id="infoAnimCount">-</span>
               </div>
             </div>
             <div class="info-row">
               <div class="info-item">
-                <span class="info-label">状态机</span>
+                <span class="info-label" data-i18n="fileInfo.stateMachines">状态机</span>
                 <span class="info-value" id="infoSMCount">-</span>
               </div>
               <div class="info-item">
-                <span class="info-label">视图模型</span>
+                <span class="info-label" data-i18n="fileInfo.viewModels">视图模型</span>
                 <span class="info-value" id="infoVMCount">-</span>
               </div>
             </div>
             <div class="info-row" id="artboardRow" style="display: none">
               <div class="info-item">
-                <span class="info-label">画板</span>
+                <span class="info-label" data-i18n="fileInfo.artboard">画板</span>
                 <select class="sel" id="artboardSelect"></select>
               </div>
             </div>
@@ -128,8 +139,16 @@
 
           <!-- Tabs -->
           <div class="sidebar-tabs">
-            <button class="sidebar-tab active" data-tab="statemachine">状态机</button>
-            <button class="sidebar-tab" data-tab="timeline">时间线</button>
+            <button
+              class="sidebar-tab active"
+              data-tab="statemachine"
+              data-i18n="tabs.stateMachine"
+            >
+              状态机
+            </button>
+            <button class="sidebar-tab" data-tab="timeline" data-i18n="tabs.timeline">
+              时间线
+            </button>
           </div>
 
           <!-- Tab content -->
@@ -138,22 +157,26 @@
             <div class="panel active" id="panel-statemachine">
               <div class="section" id="smSection">
                 <select class="sel" id="smSelect">
-                  <option value="">选择...</option>
+                  <option value="" data-i18n="controls.select">选择...</option>
                 </select>
                 <div id="smInputs" style="display: none; margin-top: 8px"></div>
               </div>
               <!-- Data Binding（状态机下方） -->
               <div class="section" id="vmSection" style="display: none">
-                <div class="sm-type-hd" style="margin-bottom: 8px">Data Binding</div>
+                <div class="sm-type-hd" style="margin-bottom: 8px" data-i18n="controls.dataBinding">
+                  Data Binding
+                </div>
                 <select class="sel" id="vmSelect">
-                  <option value="">无视图模型</option>
+                  <option value="" data-i18n="controls.noViewModel">无视图模型</option>
                 </select>
                 <div id="vmProps" style="margin-top: 8px"></div>
               </div>
             </div>
             <!-- 时间线 -->
             <div class="panel" id="panel-timeline">
-              <div id="animList"><div class="empty">加载中...</div></div>
+              <div id="animList">
+                <div class="empty" data-i18n="fileInfo.loading">加载中...</div>
+              </div>
             </div>
           </div>
         </div>
@@ -162,6 +185,10 @@
 
     <!-- Rive Runtime (本地文件，支持离线使用) -->
     <script src="./lib/rive.webgl2.js"></script>
+
+    <!-- i18n (国际化，需要在其他模块之前加载) -->
+    <script src="./js/i18n.js"></script>
+    <script src="./js/i18n-ui.js"></script>
 
     <!-- Modules (defer: 不阻塞 HTML 解析，按顺序执行) -->
     <script defer src="./js/utils.js"></script>
