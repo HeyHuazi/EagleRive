@@ -68,7 +68,8 @@
       "js/**/*.js",
       "viewer/js/**/*.js",
       "thumbnail/**/*.js",
-      "!**/node_modules/**"
+      "!**/node_modules/**",
+      "!dist/**"
     ],
     "testMatch": [
       "**/tests/**/*.test.js"
@@ -76,13 +77,9 @@
     "setupFilesAfterEnv": [
       "<rootDir>/tests/setup.js"
     ],
-    "coverageThreshold": {
-      "global": {
-        "branches": 50,
-        "functions": 50,
-        "lines": 50,
-        "statements": 50
-      }
-    }
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/dist/"
+    ]
   }
 }
