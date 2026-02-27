@@ -13,41 +13,22 @@ const fs = require('fs');
 const path = require('path');
 const { FileFormat, parseRiveFile, generateThumbnail } = require('./../js/rive-util.js');
 
-const RIVE_LOCAL = path.join(__dirname, '..', 'viewer', 'lib', 'rive.webgl2.js');
-const RIVE_WASM = path.join(__dirname, '..', 'viewer', 'lib', 'rive.wasm');
+// 使用 CDN 加载（DevEagle 验证的工作方式）
+const RIVE_CDN = 'https://unpkg.com/@rive-app/webgl2@2.33.1';
 const MAX_SIZE = 400;
 const RENDER_TIMEOUT = 10000;
 
 /**
- * 加载 Rive 运行时（本地文件，首次加载后缓存到 window.rive）
- *
- * 使用方式：直接读取文件内容并执行，避免 file:// URL 的安全限制
+ * 加载 Rive 运行时（CDN 方式 - DevEagle 验证可用）
  */
 function loadRiveRuntime() {
   if (typeof window !== 'undefined' && window.rive) return Promise.resolve();
-
   return new Promise((resolve, reject) => {
-    try {
-      // 1. 读取 Rive 运行时 JavaScript 文件内容
-      const riveJsCode = fs.readFileSync(RIVE_LOCAL, 'utf8');
-
-      // 2. 读取 WASM 文件并创建 Blob URL
-      const wasmBuffer = fs.readFileSync(RIVE_WASM);
-      const wasmBlob = new Blob([wasmBuffer], { type: 'application/wasm' });
-      const wasmUrl = URL.createObjectURL(wasmBlob);
-
-      // 3. 执行 Rive 运行时代码（在当前上下文中）
-      // 使用 Function 构造器比 eval 稍微安全一些
-      const loadRive = new Function(riveJsCode);
-      loadRive();
-
-      // 4. 配置 WASM URL
-      if (window.rive && window.rive.RuntimeLoader) window.rive.RuntimeLoader.setWasmUrl(wasmUrl);
-
-      resolve();
-    } catch (error) {
-      reject(new Error('Failed to load Rive runtime: ' + error.message));
-    }
+    const s = document.createElement('script');
+    s.src = RIVE_CDN;
+    s.onload = resolve;
+    s.onerror = () => reject(new Error('Failed to load Rive runtime'));
+    document.head.appendChild(s);
   });
 }
 
@@ -63,19 +44,6 @@ function fitSize(w, h) {
 
 /**
  * 渲染 .riv 文件状态机的第一帧
- *
- * 流程：
- *   1. 加载 Rive 运行时（有缓存）
- *   2. 在 DOM 中创建离屏 <canvas>，拦截 getContext 注入 preserveDrawingBuffer
- *   3. 用 buffer 加载 .riv 文件
- *   4. 获取画板尺寸，按比例调整 canvas
- *   5. 优先播放第一个状态机，否则播放第一个动画
- *   6. 等待30帧渲染后 toBlob() 截图
- *   7. 写入 dest 路径
- *
- * 关键：不预创建 WebGL2 上下文，让 Rive 渲染器自行创建并配置所需的
- * WebGL 扩展（羽化、模糊、圆角、混合模式等高级效果依赖这些扩展）。
- * 通过拦截 getContext 注入 preserveDrawingBuffer: true 以支持 toBlob() 截图。
  */
 async function renderFirstFrame(src, dest) {
   await loadRiveRuntime();
@@ -176,7 +144,7 @@ async function renderFirstFrame(src, dest) {
                     requestAnimationFrame(waitFrame);
                     return;
                   }
-                  // 在 rAF 回调中直接截图（此时 Rive 刚完成本帧绘制，drawingBuffer 有效）
+                  // 在 rAF 回调中直接截图
                   try {
                     canvas.toBlob(blob => {
                       doCleanup();
@@ -221,17 +189,34 @@ async function renderFirstFrame(src, dest) {
   }
 }
 
+/**
+ * 缩略图生成入口（带错误降级 - DevEagle 方式）
+ */
 module.exports = async ({ src, dest, item }) => {
   const info = parseRiveFile(src);
 
-  // .rev 文件生成 SVG 占位缩略图
-  if (info.format === FileFormat.Rev) return generateThumbnail(dest, info);
+  if (!info.isValid) throw new Error('Invalid Rive file');
 
-  // .riv 文件渲染第一帧
-  if (info.format === FileFormat.Riv) {
-    const result = await renderFirstFrame(src, dest);
-    return result;
+  // .rev 文件：运行时无法加载，使用占位缩略图
+  if (info.format === FileFormat.Rev) {
+    await generateThumbnail(src, dest, info);
+    item.width = info.width || 500;
+    item.height = info.height || 500;
+    item.noViewer = true;
+    return item;
   }
 
-  throw new Error('Unsupported file format: ' + info.format);
+  // .riv 文件：渲染状态机第一帧作为真实缩略图
+  try {
+    const dims = await renderFirstFrame(src, dest);
+    item.width = dims.width;
+    item.height = dims.height;
+  } catch (e) {
+    // 渲染失败（离线、文件损坏等），降级到 SVG 占位缩略图
+    await generateThumbnail(src, dest, info);
+    item.width = info.width || 500;
+    item.height = info.height || 500;
+  }
+
+  return item;
 };

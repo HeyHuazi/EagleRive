@@ -12,15 +12,13 @@ Eagle 格式扩展插件，为 `.riv`（运行时）和 `.rev`（编辑器备份
 
 ### 缩略图生成
 
-- 使用本地 `@rive-app/webgl2@2.35.0` 渲染器生成真实截图，完全离线可用
-- 通过 `RuntimeLoader.setWasmUrl()` + `file://` URL 定位本地 WASM，Emscripten 自动使用 XHR 加载
-- 运行时首次加载后缓存，后续缩略图生成复用
+- 通过 CDN 加载 `@rive-app/webgl2@2.33.1` 渲染器，生成真实截图
+- 运行时首次加载后缓存到 `window.rive`，后续缩略图生成复用
 - 优先渲染状态机第一帧，无状态机时回退到第一个动画
 - 预创建 WebGL2 上下文（`preserveDrawingBuffer: true`），支持 `toBlob()` 截图
-- 异步文件 I/O，不阻塞 Eagle 主线程
-- 显式释放 WebGL 上下文，支持批量生成缩略图
+- 等待 10 帧渲染，确保羽化/模糊等高级效果完成
 - `.rev` 文件自动生成占位缩略图（运行时无法加载编辑器格式）
-- 渲染失败时自动降级为 SVG 占位图
+- 渲染失败时自动降级为 SVG 占位图（通过 sharp 转 PNG）
 
 ### 交互式预览
 
@@ -47,11 +45,13 @@ Eagle 格式扩展插件，为 `.riv`（运行时）和 `.rev`（编辑器备份
 ### 侧边栏布局
 
 **文件信息**（常驻显示，Tab 上方）
+
 - 文件名、尺寸、动画数、状态机数、视图模型数
 - 多画板时显示画板选择器
 - 背景切换（白色/黑色/透明棋盘格色板）
 
 **状态机**（默认标签）
+
 - 状态机选择与 Inputs 控制
   - 触发器（Trigger）：2 列按钮网格，点击触发
   - 布尔值（Boolean）：开关切换
@@ -70,22 +70,24 @@ Eagle 格式扩展插件，为 `.riv`（运行时）和 `.rev`（编辑器备份
   - 使用 `autoBind: true` 自动绑定默认 ViewModel 实例
 
 **时间线**
+
 - 动画列表，点击切换播放
 - 切换到时间线标签页时自动播放动画
 
 ### 键盘快捷键
 
-| 按键 | 功能 |
-|------|------|
-| Ctrl+0 | 重置缩放 |
-| Ctrl++ | 放大 |
-| Ctrl+- | 缩小 |
+| 按键              | 功能     |
+| ----------------- | -------- |
+| Ctrl+0            | 重置缩放 |
+| Ctrl++            | 放大     |
+| Ctrl+-            | 缩小     |
 | 按住 Space + 拖动 | 平移画布 |
-| Ctrl + 滚轮 | 缩放 |
+| Ctrl + 滚轮       | 缩放     |
 
 ### `.rev` 文件处理
 
 `.rev` 是 Rive 编辑器备份格式，运行时无法加载。插件会：
+
 - 生成带文件信息的占位缩略图
 - 预览页面显示提示，引导用户在 Rive 编辑器中打开
 
@@ -110,6 +112,7 @@ npm install
 ```
 
 依赖：
+
 - `sharp`：SVG → PNG 转换（占位缩略图降级方案）
 
 将插件目录安装到 Eagle：**设置 → 插件 → 安装插件** → 选择本目录。
@@ -118,26 +121,23 @@ npm install
 
 ### 渲染器
 
-- 缩略图和预览均使用本地 `@rive-app/webgl2@2.35.0`（完全离线可用）
+- 缩略图使用 CDN 加载 `@rive-app/webgl2@2.33.1`（需要网络，离线时降级到 SVG 占位图）
+- 预览使用本地 `@rive-app/webgl2@2.35.0`（完全离线可用）
 - 支持：羽化、模糊、混合模式等需要 GPU 加速的视觉效果
 
 ### 缩略图截图流程
 
 **技术实现**：
 
-1. 加载本地 Rive 运行时（`rive.webgl2.js`，首次加载后缓存到 `window.rive`）
-2. 通过 `RuntimeLoader.setWasmUrl(file://...)` 设置本地 WASM 路径
-   - `file://` URL 会被 Emscripten 通过 XMLHttpRequest 加载（非 fetch），确保在 Electron 中可用
-   - 必须在任何 Rive 实例创建之前调用
-3. 在 DOM 中创建离屏 canvas，预创建 WebGL2 上下文（`preserveDrawingBuffer: true`）
-4. 异步读取 Rive 文件（`fs.promises.readFile`，不阻塞主线程）
-5. 获取画板尺寸并调整 canvas 大小
-6. 播放第一个状态机（无状态机时回退到第一个动画）
-7. 等待 10 帧渲染，确保羽化/模糊等高级效果渲染完成
-8. `toBlob()` 截图，数据完全提取后再清理 Rive 实例
-9. 异步写入 PNG（`fs.promises.writeFile`）
-10. 显式释放 WebGL 上下文（`WEBGL_lose_context`），防止批量生成时上下文耗尽
-11. 渲染失败时自动降级为 SVG 占位缩略图
+1. 通过 CDN 加载 Rive 运行时（`<script>` 标签，首次加载后缓存到 `window.rive`）
+2. 在 DOM 中创建离屏 canvas，预创建 WebGL2 上下文（`preserveDrawingBuffer: true`）
+3. 读取 Rive 文件（`fs.readFileSync`）
+4. 获取画板尺寸并调整 canvas 大小
+5. 播放第一个状态机（无状态机时回退到第一个动画）
+6. 等待 10 帧渲染，确保羽化/模糊等高级效果渲染完成
+7. `toBlob()` 截图，数据完全提取后再清理 Rive 实例
+8. 写入 PNG 文件（`fs.writeFileSync`）
+9. 渲染失败时自动降级为 SVG 占位缩略图（通过 sharp 转 PNG）
 
 ### 预览加载优化
 
@@ -149,6 +149,7 @@ npm install
 ### 二进制解析（rive-util.js）
 
 纯 Node.js 解析 `.riv` 文件头部：
+
 - 读取魔数 `RIVE`、主/次版本号
 - 解析 Rive 7+ Table of Contents（属性键列表 + 位数组）
 - 遍历对象查找 Artboard，提取宽高和画板名
@@ -174,6 +175,7 @@ npm run test:coverage
 ### v3.0.0 (2026-02-25)
 
 **新功能**
+
 - ✨ 快捷键帮助面板（点击 ? 按钮查看）
 - ✨ FPS 实时监控（右上角彩色指示：绿/橙/红）
 - ✨ 动画速度控制（0.1x - 3.0x 滑块）
@@ -181,12 +183,14 @@ npm run test:coverage
 - 🎨 统一使用 Glow UI Icons
 
 **修复**
+
 - 🐛 修复时间线播放控制不生效的问题
 - 🐛 修复 Tab 切换时动画和状态机同时播放的冲突
 - 🐛 修复重新播放后速度丢失的问题
 - 🐛 修复模块引用不一致导致的错误
 
 **改进**
+
 - ♻️ 代码模块化重构，7 个独立模块
 - ✅ 85+ 单元测试通过
 - 📈 86.48% 代码覆盖率
@@ -195,6 +199,7 @@ npm run test:coverage
 ### v2.0.0
 
 **新功能**
+
 - ✨ 支持状态机模式
 - ✨ 状态机 Inputs 控制（Trigger、Boolean、Number）
 - ✨ Data Binding 支持（ViewModel 编辑）
@@ -205,6 +210,7 @@ npm run test:coverage
 ### v1.0.0
 
 **初始版本**
+
 - 🎉 首次发布
 - ✨ 支持 `.riv` 和 `.rev` 文件预览
 - ✨ 缩略图生成
@@ -213,6 +219,7 @@ npm run test:coverage
 查看完整更新日志：[CHANGELOG.md](CHANGELOG.md)
 
 ### v1.0.0
+
 - 🎉 首次发布
 - ✨ 支持 `.riv` 和 `.rev` 文件预览
 
@@ -239,18 +246,23 @@ npm run test:coverage
 ## ❓ 常见问题
 
 ### Q: 为什么预览时一直显示 loading？
+
 A: Rive 运行时已包含在插件中，支持完全离线使用。如果仍显示 loading，请检查文件是否损坏或路径是否正确。
 
 ### Q: 缩放功能不生效？
+
 A: 确保使用的是最新版本插件。如果问题依旧，请在 [Issues](https://github.com/yourusername/EagleRive/issues) 中反馈。
 
 ### Q: FPS 显示红色？性能问题？
+
 A: FPS < 30 会显示红色。可能是动画过于复杂或设备性能不足。尝试降低播放速度或使用更简单的动画。
 
 ### Q: 支持导出动画吗？
+
 A: 暂不支持，但已在规划中（PNG 序列和 GIF 导出）。
 
 ### Q: 如何调整播放速度？
+
 A: 使用底部控制栏的速度滑块，范围 0.1x - 3.0x。
 
 ## 📄 许可证
@@ -262,6 +274,7 @@ A: 使用底部控制栏的速度滑块，范围 0.1x - 3.0x。
 - [Rive](https://rive.app/) - 强大的实时动画设计工具
 - [Eagle](https://en.eagle.cool/) - 优秀的设计素材管理工具
 - [Glow UI Icons](https://www.glowui.com/icons) - 精美的图标资源库
+- [Poison Loader](https://rive.app/marketplace/59-83-poison-loader/) - 加载动画，由 [Jia-Fong Jr.](https://rive.app/community/jia-fong/) 创作
 
 ### 参考项目
 
