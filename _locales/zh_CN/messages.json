@@ -1,4 +1,9 @@
 {
+  "manifest": {
+    "app": {
+      "name": "Rive 预览"
+    }
+  },
   "viewer": {
     "title": "Rive 查看器"
   },

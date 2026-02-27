@@ -1,4 +1,9 @@
 {
+  "manifest": {
+    "app": {
+      "name": "Rive Preview"
+    }
+  },
   "viewer": {
     "title": "Rive Viewer"
   },

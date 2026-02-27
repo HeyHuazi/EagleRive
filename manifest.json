@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "platform": "all",
   "arch": "all",
-  "name": "Rive 预览",
+  "name": "{{manifest.app.name}}",
   "logo": "/logo.png",
   "keywords": ["rive", "riv", "runtime"],
+  "fallbackLanguage": "zh_CN",
+  "languages": ["en", "zh_CN", "zh_TW", "ja_JP"],
   "devTools": false,
   "preview": {
     "riv,rev": {

@@ -1,0 +1,96 @@
+{
+  "manifest": {
+    "app": {
+      "name": "Rive 預覽"
+    }
+  },
+  "viewer": {
+    "title": "Rive 檢視器"
+  },
+  "fileInfo": {
+    "file": "檔案",
+    "size": "尺寸",
+    "animations": "動畫",
+    "stateMachines": "狀態機",
+    "viewModels": "視圖模型",
+    "artboard": "畫板",
+    "loading": "載入中..."
+  },
+  "tabs": {
+    "stateMachine": "狀態機",
+    "timeline": "時間軸"
+  },
+  "stateMachine": {
+    "triggers": "觸發器",
+    "booleans": "布林值",
+    "numbers": "數值"
+  },
+  "controls": {
+    "background": "背景",
+    "select": "選擇...",
+    "noViewModel": "無視圖模型",
+    "dataBinding": "Data Binding",
+    "empty": "暫無內容"
+  },
+  "backgrounds": {
+    "white": "白色",
+    "black": "黑色",
+    "checker": "透明"
+  },
+  "shortcuts": {
+    "title": "鍵盤捷徑鍵",
+    "panel": "捷徑鍵",
+    "close": "關閉",
+    "help": "捷徑鍵說明",
+    "playPause": "播放/暫停",
+    "zoomIn": "放大",
+    "zoomOut": "縮小",
+    "zoomReset": "重置縮放",
+    "backgroundWhite": "白色背景",
+    "backgroundBlack": "黑色背景",
+    "backgroundChecker": "透明背景",
+    "toggleHelp": "切換說明",
+    "speedUp": "加快速度",
+    "speedDown": "減慢速度",
+    "speedReset": "重置速度",
+    "desc": {
+      "resetZoom": "重置縮放",
+      "zoomIn": "放大",
+      "zoomOut": "縮小",
+      "pan": "平移畫布",
+      "scrollZoom": "縮放"
+    },
+    "keys": {
+      "resetZoom": "Ctrl+0",
+      "zoomIn": "Ctrl++",
+      "zoomOut": "Ctrl+-",
+      "pan": "按住 Space + 拖曳",
+      "scrollZoom": "Ctrl + 滾輪"
+    }
+  },
+  "performance": {
+    "fps": "幀率"
+  },
+  "speed": {
+    "label": "速度"
+  },
+  "errors": {
+    "noFilePath": "未指定檔案路徑",
+    "loadFailed": "Rive 檔案載入失敗",
+    "viewModelLoadFailed": "無法載入視圖模型實例",
+    "viewModelError": "錯誤："
+  },
+  "messages": {
+    "noAnimations": "暫無動畫",
+    "noStateMachines": "暫無狀態機",
+    "noProperties": "暫無屬性",
+    "noSupportedProperties": "暫無支援的屬性",
+    "defaultViewModel": "預設視圖模型",
+    "viewModel": "視圖模型",
+    "nestedViewModel": "嵌套視圖模型",
+    "revNotice": "Rive 執行期無法預覽此檔案。<br><br>如需預覽動畫，請在 Rive 編輯器中開啟並匯出 .riv（執行期）檔案。",
+    "revBadge": ".REV 檔案",
+    "revTitle": "Rive 編輯器備份檔案",
+    "openEditor": "開啟 Rive 編輯器"
+  }
+}
