@@ -5,9 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.0.0] - 2026-02-25
+## [1.0.0] - 2026-02-27
 
 ### Added
+
+- ✨ Poison Loader 加载动画（来自 Rive Marketplace）
+  - 根据 DPR 动态设置 Canvas 分辨率，支持高分屏
+  - 动画尺寸 600×600，5 倍放大显示
 - ✨ 快捷键帮助面板（点击 ? 按钮查看所有快捷键）
 - ✨ FPS 实时监控功能（右上角彩色指示器）
   - 🟢 绿色：≥55 FPS（流畅）
@@ -18,10 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 背景切换移至左侧
   - 缩放控制和帮助按钮移至右侧
   - 使用 `justify-content: space-between` 实现
-- ✨ 所有按钮更新为 Remix Icon 风格
+- ✨ 所有按钮更新为 Glow UI Icons 风格
 - 📝 完善项目文档（README、USER_GUIDE、CHANGELOG）
 
 ### Fixed
+
 - 🐛 修复时间线动画点击后不自动播放的问题
 - 🐛 修复暂停和重新播放按钮不生效的问题
 - 🐛 修复重新播放后速度设置丢失的问题
@@ -36,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 改用 `insertBefore` + `nextSibling` 方案
 
 ### Changed
+
 - ♻️ 代码模块化重构，拆分为 7 个独立模块：
   - `app.js` - 应用入口
   - `animation.js` - 动画模块
@@ -49,20 +55,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 背景色：`rgba(255, 255, 255, 0.95)` + `backdrop-filter: blur(8px)`
 
 ### Testing
+
 - ✅ 85 个单元测试通过
 - 📈 代码覆盖率达到 86.48%（utils.js）
 - 🧪 添加完整的模块测试套件
 
 ### Documentation
+
 - 📝 新增 `USER_GUIDE.md` - 详细用户使用手册
 - 📝 新增 `CHANGELOG.md` - 版本更新日志
 - 📝 完善 `README.md` - 添加功能介绍和徽章
 
 ---
 
-## [2.0.0] - 2025-12-XX
+## [0.2.0] - 2025-12-XX
 
 ### Added
+
 - ✨ 支持状态机（State Machine）模式
 - ✨ 状态机 Inputs 控制
   - Trigger（触发器）按钮
@@ -90,14 +99,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 切换时自动播放/暂停
 
 ### Changed
+
 - 🎨 重新设计侧边栏布局
 - 🎨 优化控制面板样式
 
 ---
 
-## [1.0.0] - 2025-11-XX
+## [0.1.0] - 2025-11-XX
 
 ### Added
+
 - 🎉 首次发布
 - ✨ 支持 `.riv` 文件预览
 - ✨ 支持 `.rev` 文件识别（显示提示信息）
@@ -110,6 +121,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✨ 文件信息显示（尺寸、动画数、状态机数）
 
 ### Technical
+
 - 📦 使用 `@rive-app/webgl2@2.35.0` 渲染器
 - 📦 使用 `sharp@0.33.2` 处理缩略图
 - 🏗️ IIFE 模块化架构
@@ -120,6 +132,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
+
 - 🎬 导出 PNG 序列功能
 - 🎬 导出 GIF 动画功能
 - 🔍 多文件对比预览
