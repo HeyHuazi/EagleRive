@@ -1,8 +1,12 @@
 # Rive 预览 — Eagle 插件
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/HeyHuazi/EagleRive)
+[![Version](https://img.shields.io/badge/version-1.0.1-green.svg)](https://github.com/HeyHuazi/EagleRive)
 [![Tests](https://img.shields.io/badge/tests-118%20passing-brightgreen.svg)](https://github.com/HeyHuazi/EagleRive)
+
+<p align="center">
+  <img src="./docs/images/cover.jpg" alt="Rive 预览插件封面" width="800"/>
+</p>
 
 ---
 
@@ -23,6 +27,10 @@
 | ------ | --------------- | ----------------- | ----------- |
 | `.riv` | Rive 运行时格式 | ✅ 完整支持       | ✅ 自动生成 |
 | `.rev` | Rive 编辑器备份 | ℹ️ 提示打开编辑器 | ✅ 占位图   |
+
+<p align="center">
+  <img src="./docs/images/features.jpg" alt="功能介绍" width="800"/>
+</p>
 
 ---
 
